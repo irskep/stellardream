@@ -8,6 +8,14 @@
 //     Rocky = "Rocky",
 // }
 
+/*
+    https://www.manyworlds.space/index.php/tag/hydrogen-and-helium-envelope/
+
+    "...it appears that once a planet has a radius more than 1.5 or 1.6
+    times the size of Earth, it will most likely have a thick gas envelope of
+    hydrogen, helium and sometimes methane and ammonia around it."
+*/
+
 export class Planet {
     isTooHot: boolean;
     isTooCold: boolean;
@@ -34,6 +42,6 @@ export class Planet {
         this.isTooCold = isTooCold;
         this.isTooHot = isTooHot;
         this.isTidallyLocked = isTidallyLocked;
-        this.isNominallyHabitable = !isTooCold && !isTooCold && !this.isTidallyLocked && this.planetType == PlanetType.Rocky;
+        this.isNominallyHabitable = !isTooCold && !isTooCold && !this.isTidallyLocked;
     }
 }

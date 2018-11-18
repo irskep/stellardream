@@ -218,10 +218,12 @@ export function getMetallicityValue(aRandomNumber: number, n2: number): number {
 export class Star {
     starType: StarType;
     luminosity: number;
-    metallicity: number;
     mass: number;
     radius: number;
     color: string;
+
+    _metallicity?: number;
+    _metallicityValues: [number, number];
 
     constructor(getRandom: any) {
         let weights = Array<[StarType, number]>();
@@ -242,6 +244,15 @@ export class Star {
           sizeValue);
         this.mass = computeMass(this.luminosity);
 
-        this.metallicity = getMetallicityValue(getRandom(), getRandom());
+        this._metallicity = undefined;
+        this._metallicityValues = [getRandom(), getRandom()];
+    }
+
+    get metallicity(): number {
+      // this is expensive, so compute it lazily
+      if (this._metallicity === null) {
+        this._metallicity = getMetallicityValue(this._metallicityValues[0], this._metallicityValues[1]);
+      }
+      return this._metallicity!;
     }
 }

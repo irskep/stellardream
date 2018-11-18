@@ -1,7 +1,7 @@
 import Alea from "alea";
 
 import {Star, StarType, computeHabitableZone} from "./stars";
-import {Planet, PlanetType} from "./planets";
+import {Planet} from "./planets";
 
 function normalizedToRange(min: number, max: number, val: number): number {
   return min + (max - min) * val;
@@ -53,7 +53,10 @@ export function addPlanets(starSystem: StarSystem, getRandom: () => number) {
     case (StarType.A):
     case (StarType.B):
     case (StarType.O):
-        return; // no obvious data available, and they wouldn't be interesting anyway
+        // These behave differently so I'm skipping them for now.
+        // Planets may form at 100-1000au from the star, but will
+        // only be habitable for a few million years.
+        return;
     }
 
     const [hzMin, hzMax] = computeHabitableZone(
@@ -82,23 +85,26 @@ export function addPlanets(starSystem: StarSystem, getRandom: () => number) {
     const closeSlots = shuffle(planetSlots.filter((dist) => dist <= hzMin));
     const farSlots = shuffle(planetSlots.filter((dist) => dist >= hzMax));
 
+    /*
 
+        https://www.nasa.gov/mission_pages/kepler/news/17-percent-of-stars-have-earth-size-planets.html
 
-    // https://medium.com/starts-with-a-bang/sorry-super-earth-fans-there-are-only-three-classes-of-planet-44f3da47eb64
+        "Extrapolating from Kepler's currently ongoing observations and results
+        from other detection techniques, scientists have determined that nearly
+        all sun-like stars have planets."
+
+    */
 
     /*
-        Maybe add some gas giants based purely on metallicity.
+        https://www.cfa.harvard.edu/news/2013-01
 
-        http://iopscience.iop.org/article/10.1086/428383/pdf
-        https://arxiv.org/pdf/1511.07438.pdf
-
-        "One-quarter of the FGK-type stars with [Fe/H] > 0.3 dex harbor
-        Jupiter-like planets with orbital periods shorter than 4 yr. In
-        contrast, gas giant planets are detected around fewer than 3% of
-        the stars with subsolar metallicity. "
+        "Altogether, the researchers found that 50 percent of stars have a
+        planet of Earth-size or larger in a close orbit. By adding larger
+        planets, which have been detected in wider orbits up to the orbital
+        distance of the Earth, this number reaches 70 percent."
     */
-    // let's apply that in a super naive way:
-    const gasGiantsProbability = starSystem.metallicity >= 0 ? 0.25 : 0.3;
+
+    // https://medium.com/starts-with-a-bang/sorry-super-earth-fans-there-are-only-three-classes-of-planet-44f3da47eb64
 
     /*
         http://www.pnas.org/content/111/35/12647
@@ -133,7 +139,7 @@ export class StarSystem {
     seed: number;
     stars: Array<Star>;
     planets: Array<Planet>;
-    metallicity: number;
+    // metallicity: number;
 
     constructor(seed: number) {
         this.seed = seed;
@@ -141,7 +147,7 @@ export class StarSystem {
         const alea = new (Alea as any)(seed);
 
         this.stars = [new Star(alea)];
-        this.metallicity = this.stars[0].metallicity;
+        // this.metallicity = this.stars[0].metallicity;
         
         /*
           Roughly 44% of star systems have two stars. The stars orbit each
@@ -159,7 +165,7 @@ export class StarSystem {
          */
         if (alea() > 0.22) {
             this.stars.push(new Star(alea));
-            this.metallicity = Math.max(this.metallicity, this.stars[1].metallicity);
+            // this.metallicity = Math.max(this.metallicity, this.stars[1].metallicity);
 
             // One strategy for generating the second star would be to force
             // it to be smaller than the first, but it's simpler to just
@@ -171,5 +177,13 @@ export class StarSystem {
 
         this.planets = [];
         addPlanets(this, alea);
+    }
+
+    get metallicity(): number {
+        let metallicity: number = this.stars[0].metallicity;
+        for (let s of this.stars) {
+            metallicity = Math.max(metallicity, s.metallicity);
+        }
+        return metallicity;
     }
 }

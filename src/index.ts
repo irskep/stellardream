@@ -59,6 +59,7 @@ if (main) {
     }
 }
 
+// Dumb visual check of the metallicity probability distribution
 function testMetallicity() {
     if (document.body.children[0].tagName == 'CANVAS') {
         document.body.removeChild(document.body.children[0]);
@@ -114,13 +115,6 @@ function testMetallicity() {
             ctx.fillStyle = 'black';
             break;
         }
-        // if (val === 0 || val === 0.3 || val == -0.45) {
-        //     ctx.fillStyle = 'red';
-        // } else if (i == 1) {
-        //     ctx.fillStyle = 'green';
-        // } else {
-        //     ctx.fillStyle = 'black';
-        // }
         ctx.fillRect(i - (min * mult), height - val * factor, 1, val * factor);
     }
     console.log(buckets);

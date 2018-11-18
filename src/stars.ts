@@ -8,7 +8,8 @@ function normalizedToRange(min: number, max: number, val: number): number {
 /* STARS */
 
 export enum StarType {
-  /* Planets in HZ will be tidally locked very quickly
+  /* Planets in HZ will be tidally locked very quickly, but about half of
+     all M dwarfs will have a planet in the HZ
    */
   M = "M",
   /* Starting to look good. Kepler searches star types K-F.

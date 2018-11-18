@@ -4,15 +4,17 @@ html {
 }
 
 .system {
-    float: left;
+    /* float: left; */
     position: relative;
-    max-width: 500px;
-    max-height: 500px;
+    /* max-width: 500px;
+    max-height: 500px; */
 
-    /* display: flex;
+    display: flex;
     align-items: center;
-    justify-content: center; */
+    justify-content: left;
+    flex-direction: row;
 
+    padding: 10px;
     border: 1px solid white;
 
     overflow: hidden;
@@ -23,4 +25,5 @@ html {
     align-items: center;
     justify-content: center;
     color: black;
+    margin-left: 10px;
 }

@@ -221,9 +221,10 @@ export class Star {
     mass: number;
     radius: number;
     color: string;
+    metallicity: number;
 
-    _metallicity?: number;
-    _metallicityValues: [number, number];
+    // _metallicity?: number;
+    // _metallicityValues: [number, number];
 
     constructor(getRandom: any) {
         let weights = Array<[StarType, number]>();
@@ -244,15 +245,16 @@ export class Star {
           sizeValue);
         this.mass = computeMass(this.luminosity);
 
-        this._metallicity = undefined;
-        this._metallicityValues = [getRandom(), getRandom()];
+        // this._metallicity = undefined;
+        // this._metallicityValues = [getRandom(), getRandom()];
+        this.metallicity = getMetallicityValue(getRandom(), getRandom());
     }
 
-    get metallicity(): number {
-      // this is expensive, so compute it lazily
-      if (this._metallicity === null) {
-        this._metallicity = getMetallicityValue(this._metallicityValues[0], this._metallicityValues[1]);
-      }
-      return this._metallicity!;
-    }
+    // get metallicity(): number {
+    //   // this is expensive, so compute it lazily
+    //   if (this._metallicity === null) {
+    //     this._metallicity = getMetallicityValue(this._metallicityValues[0], this._metallicityValues[1]);
+    //   }
+    //   return this._metallicity!;
+    // }
 }

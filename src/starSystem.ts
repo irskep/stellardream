@@ -1,7 +1,8 @@
 import Alea from "alea";
 
 import {Star, StarType, computeHabitableZone} from "./stars";
-import {Planet} from "./planets";
+import {Planet, PlanetType} from "./planets";
+import weightedRandom from "./weightedChoice";
 
 function normalizedToRange(min: number, max: number, val: number): number {
   return min + (max - min) * val;
@@ -59,6 +60,13 @@ export function addPlanets(starSystem: StarSystem, getRandom: () => number) {
         return;
     }
 
+    if (getRandom() < 0.3) {
+        // Current research suggests that 70% of sunlike stars have terran
+        // or neptunian planets (see comment later). So in 30% of cases, just
+        // bail.
+        return;
+    }
+
     const [hzMin, hzMax] = computeHabitableZone(
         starSystem.stars[0].starType, starSystem.stars[0].luminosity);
 
@@ -70,7 +78,7 @@ export function addPlanets(starSystem: StarSystem, getRandom: () => number) {
     // https://watermark.silverchair.com/stt1357.pdf?token=AQECAHi208BE49Ooan9kkhW_Ercy7Dm3ZL_9Cf3qfKAc485ysgAAAkYwggJCBgkqhkiG9w0BBwagggIzMIICLwIBADCCAigGCSqGSIb3DQEHATAeBglghkgBZQMEAS4wEQQMXXlXIp7_lwD8QJsjAgEQgIIB-Z96njhcrt4HyhJSQ_02byW4uXVLfJlgORYjKns4IgHZ7hOohpgBhhuilHJ9CqVseHjZ2gRc6UxJ9zbWPMSEbR2ccKm93ziwbQIfl0cP7lLi50lTyffZyuW4klH9hF5usqCbX3mVLhrMVLaHRqpHY9ciTzJnLosk_FJJbYNV_OkvruGc0uY_6EtOkt13FZRxTG-Of3T9CfZj2L6PMTZxVTOMP-xY8TEDr20Kgxkwp-0DA9Lbec4SBgaEAMYSo8FJDHH_VZqYUE4H5BoUk3MRzaIbmGfCxttLGm96f-Pa0uYneyt6XZFXSUj9X7kAcN1wO0ul3pLBmhhY8dGYF_dFNKOnV3Q4O5yaFjtsJXrJheJh82UsyYmZo36QaZIC8c7h5fDluDz51JM-n_pdaI_Nj6DKXk1eisgd5wLj3MeZappwhTVDsRZnyfhLRkW6VWb0bm-FzcjEw6KvOZtJh9D7-jPyqc4Qnpdt5jLXyLqXJDOlUH1IYf0fJf1k_cw1jAPMHveHHEGrxwpZ1Jee7Q7gR1hZwkVBC4BzPq2K9a22SJ8Jgktr5PHi7RXSTeXVa9mlDTM8uqnXmwYdAu_y3SeyPvIJL7LZ7KKh_Z7FPqIwMjUHWDrY20FWHUl9oRlqthDT9CgEW1ECV9h6-MfEUlKMXUKf92FKxzICRlk
 
     const planetAnchor = normalizedToRange(hzMin, hzMax, getRandom());
-    const planetSlots = [planetAnchor];
+    let planetSlots = [planetAnchor];
     // Add 5 slots away from the star (solar system value + 1)
     for (let i=0; i<5; i++) {
         planetSlots.unshift(planetSlots[0] * normalizedToRange(1.5, 3, getRandom()));
@@ -79,11 +87,33 @@ export function addPlanets(starSystem: StarSystem, getRandom: () => number) {
     for (let i=0; i<5; i++) {
         planetSlots.push(planetSlots[planetSlots.length - 1] / normalizedToRange(1.5, 3, getRandom()));
     }
+    planetSlots = shuffle(planetSlots);
+
+    /*
+        http://iopscience.iop.org/article/10.1086/428383/pdf
+        https://arxiv.org/pdf/1511.07438.pdf
+
+        "One-quarter of the FGK-type stars with [Fe/H] > 0.3 dex harbor
+        Jupiter-like planets with orbital periods shorter than 4 yr. In
+        contrast, gas giant planets are detected around fewer than 3% of
+        the stars with subsolar metallicity. "
+    */
+
+    /*
+    We can use that information to form a simple planet type distribution
+    strategy. If a star has high metallicity, we'll say gas giant probability
+    per plant is 30%; otherwise it'll be 6%.
+    */
+   const jovianWeight = starSystem.metallicity >= 0 ? 0.3 : 0.06;
+
+   // Eyeballed figures from https://www.popularmechanics.com/space/deep-space/a13733860/all-the-exoplanets-weve-discovered-in-one-small-chart/
+   const terrainWeight = 0.3;
+   const neptunianWeight = 0.6;
 
     // Now classify by HZ membership
-    const hzSlots = shuffle(planetSlots.filter((dist) => dist > hzMin && dist < hzMax));
-    const closeSlots = shuffle(planetSlots.filter((dist) => dist <= hzMin));
-    const farSlots = shuffle(planetSlots.filter((dist) => dist >= hzMax));
+    const hzSlots = planetSlots.filter((dist) => dist > hzMin && dist < hzMax);
+    const hotSlots = planetSlots.filter((dist) => dist <= hzMin);
+    const coldSlots = planetSlots.filter((dist) => dist >= hzMax);
 
     /*
 
@@ -102,10 +132,11 @@ export function addPlanets(starSystem: StarSystem, getRandom: () => number) {
         planet of Earth-size or larger in a close orbit. By adding larger
         planets, which have been detected in wider orbits up to the orbital
         distance of the Earth, this number reaches 70 percent."
+
+        "for every planet size except gas giants, the type of star doesn't
+        matter."
     */
-
-    // https://medium.com/starts-with-a-bang/sorry-super-earth-fans-there-are-only-three-classes-of-planet-44f3da47eb64
-
+        
     /*
         http://www.pnas.org/content/111/35/12647
 
@@ -121,18 +152,38 @@ export function addPlanets(starSystem: StarSystem, getRandom: () => number) {
         Mercury-like orbit, and that small HZ planets around M dwarfs abound."
     */
 
-    // if (getRandom() > gasGiantsProbability) {
-    //     starSystem.planets.push(new Planet(
-    //         farSlots.pop()!, PlanetType.ColdGasGiant, 100,
-    //         false, true, false));
+    /*
+    The way that all gets captured here is to just pick random planet slots
+    and put planets in them.
 
-    //     // Add more gas giants until we get bored
-    //     while (farSlots.length > 0 && getRandom() > 0.5) {
-    //         starSystem.planets.push(new Planet(
-    //             farSlots.pop()!, PlanetType.ColdGasGiant, 100,
-    //             false, true, false));
-    //     }
-    // }
+    ~50% of planet slots are "close" orbits (HZ or closer), which captures
+    the M-type data pretty well, and since other star types have habitable
+    zones farther out, that will naturally push all the planet slots outward
+    as well.
+    */
+
+    const planetTypeChoices: Array<[PlanetType, number]> = [
+        [PlanetType.Terran, terrainWeight],
+        [PlanetType.Neptunian, neptunianWeight],
+        [PlanetType.Jovian, jovianWeight],
+    ]
+    starSystem.planets.push(new Planet(
+        weightedRandom(planetTypeChoices, getRandom()),
+        starSystem.stars[0],
+        planetSlots.pop()!));
+
+    // https://www.nasa.gov/image-feature/ames/planetary-systems-by-number-of-known-planets
+    // Just eyeballing the graph, and with the assumption that many exoplanets
+    // are not yet discovered in known systems, let's say that there's a 30% chance
+    // of continuing our planet-adding loop each time.
+    // And FYI, it's totally fine to have 2+ gas giants in a system. This paper
+    // describes one with SIX: https://arxiv.org/pdf/1710.07337.pdf
+    while (planetSlots.length > 0 && getRandom() < 0.3) {
+        starSystem.planets.push(new Planet(
+            weightedRandom(planetTypeChoices, getRandom()),
+            starSystem.stars[0],
+            planetSlots.pop()!));
+    }
 }
 
 export class StarSystem {

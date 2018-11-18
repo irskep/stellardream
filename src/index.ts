@@ -33,11 +33,6 @@ if (main) {
         systemEl.className = 'system';
 
         for (let star of system.stars) {
-            // const labelEl = document.createElement('div');
-            // labelEl.innerHTML = star.starType;
-            // labelEl.style.textAlign = 'center';
-            // systemEl.appendChild(labelEl);
-
             const starEl = document.createElement('div');
             systemEl.appendChild(starEl);
             starEl.className = 'star';

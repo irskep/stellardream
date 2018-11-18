@@ -364,7 +364,7 @@ function cheatStars() {
         stars_1.HabitableZonePlanetLikelihoods.set(t, stars_1.HabitableZonePlanetLikelihoods.get(t) * 250);
     }
 }
-cheatStars();
+// cheatStars();
 var StarSystem = /** @class */function () {
     function StarSystem(seed) {
         this.seed = seed;

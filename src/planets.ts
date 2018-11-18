@@ -14,6 +14,7 @@ export enum PlanetType {
     Terran = "Terran",
     Neptunian = "Neptunian",
     Jovian = "Jovian",
+    Placeholder = "Placeholder",
 }
 
 // Units: 10^x earth-masses

@@ -6,7 +6,7 @@ html {
 .system {
     /* float: left; */
     position: relative;
-    height: 100px;
+    height: 80px;
     /* max-width: 500px;
     max-height: 500px; */
 
@@ -17,7 +17,7 @@ html {
 
     padding: 10px;
 
-    overflow: hidden;
+    overflow-x: scroll;
 }
 
 .star {
@@ -31,13 +31,13 @@ html {
 
 .planet-separator {
     width: 1px;
-    height: 100px;
+    height: 80px;
     border-left: 1px solid white;
     margin: 0 3px;
 }
 
 .hz-indicator {
-    height: 100px;
+    height: 80px;
     background-color: rgba(128, 255, 128, 0.2);
     position: absolute;
     top: -50px;
@@ -57,6 +57,14 @@ html {
 
     top: -7.5px;
     margin-left: -7.5px;
+}
+
+.planet-placeholder {
+    width: 1px;
+    height: 15px;
+    background-color: white;
+
+    top: -7.5px;
 }
 
 .planet-neptunian {

@@ -79,14 +79,16 @@ export function addPlanets(starSystem: StarSystem, getRandom: () => number) {
 
     const planetAnchor = normalizedToRange(hzMin, hzMax, getRandom());
     let planetSlots = [planetAnchor];
-    // Add 5 slots away from the star (solar system value + 1)
+    // Add 6 slots away from the star (solar system value + 1)
     for (let i=0; i<5; i++) {
-        planetSlots.unshift(planetSlots[0] * normalizedToRange(1.5, 3, getRandom()));
+        planetSlots.unshift(planetSlots[0] * normalizedToRange(1.1, 2, getRandom()));
     }
     // Add 4 slots close to the star (solar system value + 1)
     for (let i=0; i<5; i++) {
-        planetSlots.push(planetSlots[planetSlots.length - 1] / normalizedToRange(1.5, 3, getRandom()));
+        planetSlots.push(planetSlots[planetSlots.length - 1] / normalizedToRange(1.1, 2, getRandom()));
     }
+    // Remember original slots so we can add placeholder planets later on as markers
+    const originalSlots = planetSlots.map((i) => i);
     planetSlots = shuffle(planetSlots);
 
     /*
@@ -104,15 +106,15 @@ export function addPlanets(starSystem: StarSystem, getRandom: () => number) {
     strategy. If a star has high metallicity, we'll say gas giant probability
     per plant is 30%; otherwise it'll be 6%.
     */
-   const jovianWeight = starSystem.metallicity >= 0 ? 0.3 : 0.06;
+   const jovianWeight = starSystem.metallicity >= 0 ? 0.3 : 0.04;
 
    // Eyeballed figures from https://www.popularmechanics.com/space/deep-space/a13733860/all-the-exoplanets-weve-discovered-in-one-small-chart/
    const terrainWeight = 0.3;
    const neptunianWeight = 0.6;
 
-    // const hzSlots = planetSlots.filter((dist) => dist > hzMin && dist < hzMax);
-    // const hotSlots = planetSlots.filter((dist) => dist <= hzMin);
-    // const coldSlots = planetSlots.filter((dist) => dist >= hzMax);
+    const hzSlots = planetSlots.filter((dist) => dist > hzMin && dist < hzMax);
+    const hotSlots = planetSlots.filter((dist) => dist <= hzMin);
+    const coldSlots = planetSlots.filter((dist) => dist >= hzMax);
 
     /*
 
@@ -166,10 +168,21 @@ export function addPlanets(starSystem: StarSystem, getRandom: () => number) {
         [PlanetType.Neptunian, neptunianWeight],
         [PlanetType.Jovian, jovianWeight],
     ]
-    starSystem.planets.push(new Planet(
-        weightedRandom(planetTypeChoices, getRandom()),
-        starSystem.stars[0],
-        planetSlots.pop()!));
+
+    // As mentioned earlier, half of dwarf stars have a Terran planet
+    // in their HZs. For other stars, just do something random.
+    if (starSystem.stars[0].starType == StarType.M) {
+        starSystem.planets.push(new Planet(
+            weightedRandom(planetTypeChoices, getRandom()),
+            starSystem.stars[0],
+            hzSlots.pop()!));
+        planetSlots = hzSlots.concat(hotSlots).concat(coldSlots);
+    } else {
+        starSystem.planets.push(new Planet(
+            weightedRandom(planetTypeChoices, getRandom()),
+            starSystem.stars[0],
+            planetSlots.pop()!));
+    }
 
     // https://www.nasa.gov/image-feature/ames/planetary-systems-by-number-of-known-planets
     // Just eyeballing the graph, and with the assumption that many exoplanets
@@ -183,6 +196,11 @@ export function addPlanets(starSystem: StarSystem, getRandom: () => number) {
             starSystem.stars[0],
             planetSlots.pop()!));
     }
+
+    // for (let s of originalSlots) {
+    //     starSystem.planets.push(new Planet(
+    //         PlanetType.Placeholder, starSystem.stars[0], s));
+    // }
 }
 
 export class StarSystem {

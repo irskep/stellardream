@@ -11,9 +11,9 @@ export enum KeplerGrouping {
 
 // https://medium.com/starts-with-a-bang/sorry-super-earth-fans-there-are-only-three-classes-of-planet-44f3da47eb64
 export enum PlanetType {
-    Terran,
-    Neptunian,
-    Jovian,
+    Terran = "Terran",
+    Neptunian = "Neptunian",
+    Jovian = "Jovian",
 }
 
 // Units: 10^x earth-masses

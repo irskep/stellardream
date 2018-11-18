@@ -6,6 +6,7 @@ html {
 .system {
     /* float: left; */
     position: relative;
+    height: 100px;
     /* max-width: 500px;
     max-height: 500px; */
 
@@ -15,7 +16,6 @@ html {
     flex-direction: row;
 
     padding: 10px;
-    border: 1px solid white;
 
     overflow: hidden;
 }
@@ -26,4 +26,55 @@ html {
     justify-content: center;
     color: black;
     margin-left: 10px;
+    flex-shrink: 0;
+}
+
+.planet-separator {
+    width: 1px;
+    height: 100px;
+    border-left: 1px solid white;
+    margin: 0 3px;
+}
+
+.hz-indicator {
+    height: 100px;
+    background-color: rgba(128, 255, 128, 0.2);
+    position: absolute;
+    top: -50px;
+}
+
+.planets-container {
+    position: relative;
+    height: 1px;
+    margin-left: 2px;
+}
+
+.planet-terran {
+    width: 15px;
+    height: 15px;
+    border-radius: 7.5px;
+    background-color: gray;
+
+    top: -7.5px;
+    margin-left: -7.5px;
+}
+
+.planet-neptunian {
+    width: 20px;
+    height: 20px;
+    border-radius: 10px;
+    background-color: blue;
+
+    top: -10px;
+    margin-left: -10px;
+}
+
+.planet-jovian {
+    width: 40px;
+    height: 40px;
+    border-radius: 20px;
+    background-color: burlywood;
+
+    top: -20px;
+    margin-left: -20px;
 }

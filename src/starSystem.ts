@@ -110,10 +110,9 @@ export function addPlanets(starSystem: StarSystem, getRandom: () => number) {
    const terrainWeight = 0.3;
    const neptunianWeight = 0.6;
 
-    // Now classify by HZ membership
-    const hzSlots = planetSlots.filter((dist) => dist > hzMin && dist < hzMax);
-    const hotSlots = planetSlots.filter((dist) => dist <= hzMin);
-    const coldSlots = planetSlots.filter((dist) => dist >= hzMax);
+    // const hzSlots = planetSlots.filter((dist) => dist > hzMin && dist < hzMax);
+    // const hotSlots = planetSlots.filter((dist) => dist <= hzMin);
+    // const coldSlots = planetSlots.filter((dist) => dist >= hzMax);
 
     /*
 

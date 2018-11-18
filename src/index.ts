@@ -42,9 +42,12 @@ if (main) {
             systemEl.appendChild(starEl);
             starEl.className = 'star';
             starEl.style.backgroundColor = star.color;
-            starEl.innerHTML = star.starType;
+            starEl.innerHTML = star.starType == StarType.M ? "" : star.starType;
+            starEl.title = JSON.stringify(star, null, 2);
 
-            const w = 10 / 0.08 * star.radius;
+            const minStarSize = 0.08;
+            const minPixelSize = 5;
+            const w = minPixelSize / minStarSize * star.radius;
             starEl.style.width = w.toString() + 'px';
             starEl.style.height = w.toString() + 'px';
             starEl.style.borderRadius = (w / 2).toString() + 'px';

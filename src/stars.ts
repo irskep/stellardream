@@ -104,7 +104,7 @@ export const StarColors = new Map<StarType, string>([
 // http://www.solstation.com/habitable.htm
 /**
 * ~44% of F6-K3 stars with 0.5-1.5 stellar masses are likely binary/multiple star systems,
-* makin stable orbits extremely unlikely unless the stars are close together.
+* making stable orbits extremely unlikely unless the stars are close together.
 * 
 * Inside HZ: "water is broken up by stellar radiation into oxygen and hydrogen...
 * the freed hydrogen would escape to space due to the relatively puny
@@ -160,6 +160,27 @@ export function computeHabitableZone(t: StarType, luminosity: number): [number, 
       computeHabitableZoneHelper(luminosity, SeffOuter.get(t)!)]
 }
 
+export function computeMass(luminosity: number): number {
+  // https://en.wikipedia.org/wiki/Mass%E2%80%93luminosity_relation
+  // and also 
+  // http://lup.lub.lu.se/luur/download?func=downloadFile&recordOId=8867455&fileOId=8870454
+  let a = 0.23;
+  let b = 2.3;
+  if (luminosity > 0.03) {
+    a = 1;
+    b = 4;
+  }
+  if (luminosity > 16) {
+    a = 1.5;
+    b = 3.5;
+  }
+  if (luminosity > 54) {
+    a = 3200;
+    b = 1;
+  }
+  return Math.pow(luminosity / a, b);
+}
+
 /*
 // this is garbage and wrong, don't use this
 export function computeRadius(t: StarType, luminosity: number): number {
@@ -196,7 +217,6 @@ export class Star {
           StarRadiusMax.get(this.starType)!,
           sizeValue);
 
-        // https://en.wikipedia.org/wiki/Mass%E2%80%93luminosity_relation
-        this.mass = Math.pow(this.luminosity, 1 / 3.5);
+        this.mass = computeMass(this.luminosity);
     }
 }

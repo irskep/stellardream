@@ -23,7 +23,7 @@ function cheatStars() {
         HabitableZonePlanetLikelihoods.set(t, HabitableZonePlanetLikelihoods.get(t)! * 250);
     }
 }
-cheatStars();
+// cheatStars();
 
     
 class StarSystem {

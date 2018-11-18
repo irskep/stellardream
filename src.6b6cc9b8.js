@@ -127,6 +127,117 @@ function weightedRandom(weights, normalizedValue) {
     throw new Error("Choice error: " + randomValue);
 }
 exports.default = weightedRandom;
+},{}],"../node_modules/gaussian/lib/gaussian.js":[function(require,module,exports) {
+(function (exports) {
+
+  // Complementary error function
+  // From Numerical Recipes in C 2e p221
+  var erfc = function (x) {
+    var z = Math.abs(x);
+    var t = 1 / (1 + z / 2);
+    var r = t * Math.exp(-z * z - 1.26551223 + t * (1.00002368 + t * (0.37409196 + t * (0.09678418 + t * (-0.18628806 + t * (0.27886807 + t * (-1.13520398 + t * (1.48851587 + t * (-0.82215223 + t * 0.17087277)))))))));
+    return x >= 0 ? r : 2 - r;
+  };
+
+  // Inverse complementary error function
+  // From Numerical Recipes 3e p265
+  var ierfc = function (x) {
+    if (x >= 2) {
+      return -100;
+    }
+    if (x <= 0) {
+      return 100;
+    }
+
+    var xx = x < 1 ? x : 2 - x;
+    var t = Math.sqrt(-2 * Math.log(xx / 2));
+
+    var r = -0.70711 * ((2.30753 + t * 0.27061) / (1 + t * (0.99229 + t * 0.04481)) - t);
+
+    for (var j = 0; j < 2; j++) {
+      var err = erfc(r) - xx;
+      r += err / (1.12837916709551257 * Math.exp(-(r * r)) - r * err);
+    }
+
+    return x < 1 ? r : -r;
+  };
+
+  // Models the normal distribution
+  var Gaussian = function (mean, variance) {
+    if (variance <= 0) {
+      throw new Error('Variance must be > 0 (but was ' + variance + ')');
+    }
+    this.mean = mean;
+    this.variance = variance;
+    this.standardDeviation = Math.sqrt(variance);
+  };
+
+  // Probability density function
+  Gaussian.prototype.pdf = function (x) {
+    var m = this.standardDeviation * Math.sqrt(2 * Math.PI);
+    var e = Math.exp(-Math.pow(x - this.mean, 2) / (2 * this.variance));
+    return e / m;
+  };
+
+  // Cumulative density function
+  Gaussian.prototype.cdf = function (x) {
+    return 0.5 * erfc(-(x - this.mean) / (this.standardDeviation * Math.sqrt(2)));
+  };
+
+  // Percent point function
+  Gaussian.prototype.ppf = function (x) {
+    return this.mean - this.standardDeviation * Math.sqrt(2) * ierfc(2 * x);
+  };
+
+  // Product distribution of this and d (scale for constant)
+  Gaussian.prototype.mul = function (d) {
+    if (typeof d === "number") {
+      return this.scale(d);
+    }
+    var precision = 1 / this.variance;
+    var dprecision = 1 / d.variance;
+    return fromPrecisionMean(precision + dprecision, precision * this.mean + dprecision * d.mean);
+  };
+
+  // Quotient distribution of this and d (scale for constant)
+  Gaussian.prototype.div = function (d) {
+    if (typeof d === "number") {
+      return this.scale(1 / d);
+    }
+    var precision = 1 / this.variance;
+    var dprecision = 1 / d.variance;
+    return fromPrecisionMean(precision - dprecision, precision * this.mean - dprecision * d.mean);
+  };
+
+  // Addition of this and d
+  Gaussian.prototype.add = function (d) {
+    return gaussian(this.mean + d.mean, this.variance + d.variance);
+  };
+
+  // Subtraction of this and d
+  Gaussian.prototype.sub = function (d) {
+    return gaussian(this.mean - d.mean, this.variance + d.variance);
+  };
+
+  // Scale this by constant c
+  Gaussian.prototype.scale = function (c) {
+    return gaussian(this.mean * c, this.variance * c * c);
+  };
+
+  var gaussian = function (mean, variance) {
+    return new Gaussian(mean, variance);
+  };
+
+  var fromPrecisionMean = function (precision, precisionmean) {
+    return gaussian(precisionmean / precision, 1 / precision);
+  };
+
+  exports(gaussian);
+})(typeof exports !== "undefined" ? function (e) {
+  module.exports = e;
+} : function (e) {
+  this["gaussian"] = e;
+});
 },{}],"stars.ts":[function(require,module,exports) {
 "use strict";
 
@@ -135,13 +246,15 @@ var __importDefault = this && this.__importDefault || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var weightedChoice_1 = __importDefault(require("./weightedChoice"));
+var gaussian_1 = __importDefault(require("gaussian"));
 function normalizedToRange(min, max, val) {
     return min + (max - min) * val;
 }
 /* STARS */
 var StarType;
 (function (StarType) {
-    /* Planets in HZ will be tidally locked very quickly
+    /* Planets in HZ will be tidally locked very quickly, but about half of
+       all M dwarfs will have a planet in the HZ
      */
     StarType["M"] = "M";
     /* Starting to look good. Kepler searches star types K-F.
@@ -223,6 +336,8 @@ function computeMass(luminosity) {
 exports.computeMass = computeMass;
 /*
 // this is garbage and wrong, don't use this
+// might be able to salvage using this:
+// https://www.astro.princeton.edu/~gk/A403/constants.pdf
 export function computeRadius(t: StarType, luminosity: number): number {
   const temperature = StarTemperature.get(t)!;
   const tempRatio = temperature / StarTemperature.get(StarType.G)!
@@ -230,24 +345,48 @@ export function computeRadius(t: StarType, luminosity: number): number {
   return Math.sqrt(Math.pow(tempRatio, 4) / luminosity);
 }
 */
+/*
+  https://arxiv.org/pdf/1511.07438.pdf
+  
+  According to this paper, metallicity distribution is best represented
+  by a combination of two Gaussians.
+
+  Units are in [Fe/H], which you should google. It's a measure of the
+  presence of iron vs the solar system on a logarithmic scale.
+*/
+function getMetallicityValue(aRandomNumber, n2) {
+    var dist1 = gaussian_1.default(0.3, 0.1);
+    var dist2 = gaussian_1.default(-0.45, 0.1);
+    var val1 = dist1.ppf(aRandomNumber);
+    var val2 = dist2.ppf(aRandomNumber);
+    // According to stats.stackexchange.com there's a super mathy way to
+    // combine two Gaussian distributions, but using a weighted choice
+    // seems to produce similar results, so whatever.
+    return weightedChoice_1.default([[val1, 1.5], [val2, 0.5]], n2);
+}
+exports.getMetallicityValue = getMetallicityValue;
 var Star = /** @class */function () {
-    function Star(alea) {
+    // _metallicity?: number;
+    // _metallicityValues: [number, number];
+    function Star(getRandom) {
         var weights = Array();
         exports.StarTypeProbabilities.forEach(function (v, k) {
             weights.push([k, v]);
         });
-        this.starType = weightedChoice_1.default(weights, alea());
-        // StarTypeProbabilities.keys().map((k: StarType) => []), alea);
+        this.starType = weightedChoice_1.default(weights, getRandom());
         this.color = exports.StarColors.get(this.starType);
-        var sizeValue = alea();
+        var sizeValue = getRandom();
         this.luminosity = normalizedToRange(exports.StarLuminosityMin.get(this.starType), exports.StarLuminosityMax.get(this.starType), sizeValue);
         this.radius = normalizedToRange(exports.StarRadiusMin.get(this.starType), exports.StarRadiusMax.get(this.starType), sizeValue);
         this.mass = computeMass(this.luminosity);
+        // this._metallicity = undefined;
+        // this._metallicityValues = [getRandom(), getRandom()];
+        this.metallicity = getMetallicityValue(getRandom(), getRandom());
     }
     return Star;
 }();
 exports.Star = Star;
-},{"./weightedChoice":"weightedChoice.ts"}],"../node_modules/alea/alea.js":[function(require,module,exports) {
+},{"./weightedChoice":"weightedChoice.ts","gaussian":"../node_modules/gaussian/lib/gaussian.js"}],"../node_modules/alea/alea.js":[function(require,module,exports) {
 var define;
 (function (root, factory) {
   if (typeof exports === 'object') {
@@ -359,6 +498,49 @@ var define;
   }
 }));
 
+},{}],"planets.ts":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var KeplerGrouping;
+(function (KeplerGrouping) {
+    KeplerGrouping["HotJupiter"] = "HotJupiter";
+    KeplerGrouping["ColdGasGiant"] = "ColdGasGiant";
+    KeplerGrouping["IceGiant"] = "IceGiant";
+    KeplerGrouping["OceanWorld"] = "OceanWorld";
+    KeplerGrouping["LavaWorld"] = "LavaWorld";
+    KeplerGrouping["Rocky"] = "Rocky";
+})(KeplerGrouping = exports.KeplerGrouping || (exports.KeplerGrouping = {}));
+// https://medium.com/starts-with-a-bang/sorry-super-earth-fans-there-are-only-three-classes-of-planet-44f3da47eb64
+var PlanetType;
+(function (PlanetType) {
+    PlanetType["Terran"] = "Terran";
+    PlanetType["Neptunian"] = "Neptunian";
+    PlanetType["Jovian"] = "Jovian";
+    PlanetType["Placeholder"] = "Placeholder";
+})(PlanetType = exports.PlanetType || (exports.PlanetType = {}));
+// Units: 10^x earth-masses
+// https://arxiv.org/pdf/1603.08614v2.pdf%29
+/*
+    https://www.manyworlds.space/index.php/tag/hydrogen-and-helium-envelope/
+
+    "...it appears that once a planet has a radius more than 1.5 or 1.6
+    times the size of Earth, it will most likely have a thick gas envelope of
+    hydrogen, helium and sometimes methane and ammonia around it."
+*/
+exports.PlanetTypeMassMin = new Map([[PlanetType.Terran, -1.3], [PlanetType.Neptunian, 0.22], [PlanetType.Jovian, 2]]);
+exports.PlanetTypeMassMax = new Map([[PlanetType.Terran, 0.22], [PlanetType.Neptunian, 2], [PlanetType.Jovian, 3.5]]);
+// R = M^exponent
+exports.PlanetTypeRadiusExponent = new Map([[PlanetType.Terran, 0.28], [PlanetType.Neptunian, 0.59], [PlanetType.Jovian, -0.04]]);
+var Planet = /** @class */function () {
+    function Planet(planetType, star, distance) {
+        this.planetType = planetType;
+        this.distance = distance;
+        this.star = star;
+    }
+    return Planet;
+}();
+exports.Planet = Planet;
 },{}],"starSystem.ts":[function(require,module,exports) {
 "use strict";
 
@@ -368,11 +550,183 @@ var __importDefault = this && this.__importDefault || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 var alea_1 = __importDefault(require("alea"));
 var stars_1 = require("./stars");
+var planets_1 = require("./planets");
+var weightedChoice_1 = __importDefault(require("./weightedChoice"));
+function normalizedToRange(min, max, val) {
+    return min + (max - min) * val;
+}
+function shuffle(a) {
+    var _a;
+    for (var i = a.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        _a = [a[j], a[i]], a[i] = _a[0], a[j] = _a[1];
+    }
+    return a;
+}
+/*
+    http://www.solstation.com/habitable.htm
+
+    "Thus far, no one theory has been able to make definitive predictions of the
+    frequency of planet formation nor of the distribution of planetary sizes and
+    orbits."
+
+    "planetary systems may be more common around stars whose spectra show an
+    enriched abundance of elements heavier than hydrogen and helium -- also
+    called high 'metallicity'"
+
+    "Numerical modeling of the accumulation of planetesimals during molecular
+    cloud collapse have produced, on average, four rocky inner planets for models
+    similar to the Solar System. The results included two, roughly Earth-sized
+    planets and two smaller planets, where their orbital distance ranged between
+    that of Mercury (0.4 AU) and Mars (1.5 AU). Hence, some astronomers expect to
+    find rocky planets around other stars within that range of orbits."
+
+    "NASA's Kepler Mission is defining the size of an Earth-type planet to be
+    those that have between 0.5 and 2.0 times Earth's mass, or those having
+    between 0.8 and 1.3 times Earth's radius or diameter. The mission will
+    also investigate larger terrestrial planets that have two to ten Earth
+    masses, or 1.3 to 2.2 times its radius/diameter. Larger planets, however,
+    will be excluded because they may have sufficient gravity to attract a
+    massive hydrogen-helium atmosphere like the gas giants. On the other
+    extreme, those planets -- like Mars or Mercury -- that have less than
+    half the Earth's mass and are located in or near their star's habitable
+    zone may lose their initial life-supporting atmosphere because of low
+    gravity and/or the lack of plate tectonics needed to recycle
+    heat-retaining carbon dioxide gas back into the atmosphere."
+
+*/
+function addPlanets(starSystem, getRandom) {
+    switch (starSystem.stars[0].starType) {
+        case stars_1.StarType.A:
+        case stars_1.StarType.B:
+        case stars_1.StarType.O:
+            // These behave differently so I'm skipping them for now.
+            // Planets may form at 100-1000au from the star, but will
+            // only be habitable for a few million years.
+            return;
+    }
+    if (getRandom() < 0.3) {
+        // Current research suggests that 70% of sunlike stars have terran
+        // or neptunian planets (see comment later). So in 30% of cases, just
+        // bail.
+        return;
+    }
+    var _a = stars_1.computeHabitableZone(starSystem.stars[0].starType, starSystem.stars[0].luminosity),
+        hzMin = _a[0],
+        hzMax = _a[1];
+    // Stick a planet slot in the habitable zone because I don't have anything
+    // else to go on. Then add slots toward and away from the sun based on
+    // the Titus-Bode law:
+    // https://en.wikipedia.org/wiki/Titius%E2%80%93Bode_law
+    // According to this paper it's pretty darn accurate:
+    // https://watermark.silverchair.com/stt1357.pdf?token=AQECAHi208BE49Ooan9kkhW_Ercy7Dm3ZL_9Cf3qfKAc485ysgAAAkYwggJCBgkqhkiG9w0BBwagggIzMIICLwIBADCCAigGCSqGSIb3DQEHATAeBglghkgBZQMEAS4wEQQMXXlXIp7_lwD8QJsjAgEQgIIB-Z96njhcrt4HyhJSQ_02byW4uXVLfJlgORYjKns4IgHZ7hOohpgBhhuilHJ9CqVseHjZ2gRc6UxJ9zbWPMSEbR2ccKm93ziwbQIfl0cP7lLi50lTyffZyuW4klH9hF5usqCbX3mVLhrMVLaHRqpHY9ciTzJnLosk_FJJbYNV_OkvruGc0uY_6EtOkt13FZRxTG-Of3T9CfZj2L6PMTZxVTOMP-xY8TEDr20Kgxkwp-0DA9Lbec4SBgaEAMYSo8FJDHH_VZqYUE4H5BoUk3MRzaIbmGfCxttLGm96f-Pa0uYneyt6XZFXSUj9X7kAcN1wO0ul3pLBmhhY8dGYF_dFNKOnV3Q4O5yaFjtsJXrJheJh82UsyYmZo36QaZIC8c7h5fDluDz51JM-n_pdaI_Nj6DKXk1eisgd5wLj3MeZappwhTVDsRZnyfhLRkW6VWb0bm-FzcjEw6KvOZtJh9D7-jPyqc4Qnpdt5jLXyLqXJDOlUH1IYf0fJf1k_cw1jAPMHveHHEGrxwpZ1Jee7Q7gR1hZwkVBC4BzPq2K9a22SJ8Jgktr5PHi7RXSTeXVa9mlDTM8uqnXmwYdAu_y3SeyPvIJL7LZ7KKh_Z7FPqIwMjUHWDrY20FWHUl9oRlqthDT9CgEW1ECV9h6-MfEUlKMXUKf92FKxzICRlk
+    var planetAnchor = normalizedToRange(hzMin, hzMax, getRandom());
+    var planetSlots = [planetAnchor];
+    // Add 6 slots away from the star (solar system value + 1)
+    for (var i = 0; i < 5; i++) {
+        planetSlots.unshift(planetSlots[0] * normalizedToRange(1.1, 2, getRandom()));
+    }
+    // Add 4 slots close to the star (solar system value + 1)
+    for (var i = 0; i < 5; i++) {
+        planetSlots.push(planetSlots[planetSlots.length - 1] / normalizedToRange(1.1, 2, getRandom()));
+    }
+    // Remember original slots so we can add placeholder planets later on as markers
+    var originalSlots = planetSlots.map(function (i) {
+        return i;
+    });
+    planetSlots = shuffle(planetSlots);
+    /*
+        http://iopscience.iop.org/article/10.1086/428383/pdf
+        https://arxiv.org/pdf/1511.07438.pdf
+         "One-quarter of the FGK-type stars with [Fe/H] > 0.3 dex harbor
+        Jupiter-like planets with orbital periods shorter than 4 yr. In
+        contrast, gas giant planets are detected around fewer than 3% of
+        the stars with subsolar metallicity. "
+    */
+    /*
+    We can use that information to form a simple planet type distribution
+    strategy. If a star has high metallicity, we'll say gas giant probability
+    per plant is 30%; otherwise it'll be 6%.
+    */
+    var jovianWeight = starSystem.metallicity >= 0 ? 0.3 : 0.04;
+    // Eyeballed figures from https://www.popularmechanics.com/space/deep-space/a13733860/all-the-exoplanets-weve-discovered-in-one-small-chart/
+    var terrainWeight = 0.3;
+    var neptunianWeight = 0.6;
+    var hzSlots = planetSlots.filter(function (dist) {
+        return dist > hzMin && dist < hzMax;
+    });
+    var hotSlots = planetSlots.filter(function (dist) {
+        return dist <= hzMin;
+    });
+    var coldSlots = planetSlots.filter(function (dist) {
+        return dist >= hzMax;
+    });
+    /*
+         https://www.nasa.gov/mission_pages/kepler/news/17-percent-of-stars-have-earth-size-planets.html
+         "Extrapolating from Kepler's currently ongoing observations and results
+        from other detection techniques, scientists have determined that nearly
+        all sun-like stars have planets."
+     */
+    /*
+        https://www.cfa.harvard.edu/news/2013-01
+         "Altogether, the researchers found that 50 percent of stars have a
+        planet of Earth-size or larger in a close orbit. By adding larger
+        planets, which have been detected in wider orbits up to the orbital
+        distance of the Earth, this number reaches 70 percent."
+         "for every planet size except gas giants, the type of star doesn't
+        matter."
+    */
+    /*
+        http://www.pnas.org/content/111/35/12647
+         "The HZ of M-type dwarfs corresponds to orbital periods of a few weeks
+        to a few months. Kepler’s current planet catalog is sufficient for
+        addressing statistics of HZ exoplanets orbiting M stars. The results
+        indicate that the average number of small (0.5–1.4 R⊕) HZ
+        (optimistic) planets per M-type main-sequence star is ∼0.5."
+         "Collectively, the statistics emerging from the Kepler data suggest
+        that every late-type main-sequence star has at least one planet (of
+        any size), that one in six has an Earth-size planet within a
+        Mercury-like orbit, and that small HZ planets around M dwarfs abound."
+    */
+    /*
+    The way that all gets captured here is to just pick random planet slots
+    and put planets in them.
+     ~50% of planet slots are "close" orbits (HZ or closer), which captures
+    the M-type data pretty well, and since other star types have habitable
+    zones farther out, that will naturally push all the planet slots outward
+    as well.
+    */
+    var planetTypeChoices = [[planets_1.PlanetType.Terran, terrainWeight], [planets_1.PlanetType.Neptunian, neptunianWeight], [planets_1.PlanetType.Jovian, jovianWeight]];
+    // As mentioned earlier, half of dwarf stars have a Terran planet
+    // in their HZs. For other stars, just do something random.
+    if (starSystem.stars[0].starType == stars_1.StarType.M) {
+        starSystem.planets.push(new planets_1.Planet(weightedChoice_1.default(planetTypeChoices, getRandom()), starSystem.stars[0], hzSlots.pop()));
+        planetSlots = hzSlots.concat(hotSlots).concat(coldSlots);
+    } else {
+        starSystem.planets.push(new planets_1.Planet(weightedChoice_1.default(planetTypeChoices, getRandom()), starSystem.stars[0], planetSlots.pop()));
+    }
+    // https://www.nasa.gov/image-feature/ames/planetary-systems-by-number-of-known-planets
+    // Just eyeballing the graph, and with the assumption that many exoplanets
+    // are not yet discovered in known systems, let's say that there's a 30% chance
+    // of continuing our planet-adding loop each time.
+    // And FYI, it's totally fine to have 2+ gas giants in a system. This paper
+    // describes one with SIX: https://arxiv.org/pdf/1710.07337.pdf
+    while (planetSlots.length > 0 && getRandom() < 0.3) {
+        starSystem.planets.push(new planets_1.Planet(weightedChoice_1.default(planetTypeChoices, getRandom()), starSystem.stars[0], planetSlots.pop()));
+    }
+    // for (let s of originalSlots) {
+    //     starSystem.planets.push(new Planet(
+    //         PlanetType.Placeholder, starSystem.stars[0], s));
+    // }
+}
+exports.addPlanets = addPlanets;
 var StarSystem = /** @class */function () {
+    // metallicity: number;
     function StarSystem(seed) {
         this.seed = seed;
         var alea = new alea_1.default(seed);
         this.stars = [new stars_1.Star(alea)];
+        // this.metallicity = this.stars[0].metallicity;
         /*
           Roughly 44% of star systems have two stars. The stars orbit each
           other at distances of "zero-ish" to 1 light year. Alpha Centauri,
@@ -388,6 +742,7 @@ var StarSystem = /** @class */function () {
          */
         if (alea() > 0.22) {
             this.stars.push(new stars_1.Star(alea));
+            // this.metallicity = Math.max(this.metallicity, this.stars[1].metallicity);
             // One strategy for generating the second star would be to force
             // it to be smaller than the first, but it's simpler to just
             // generate them independently and sort by mass.
@@ -395,11 +750,25 @@ var StarSystem = /** @class */function () {
                 return b.mass - a.mass;
             });
         }
+        this.planets = [];
+        addPlanets(this, alea);
     }
+    Object.defineProperty(StarSystem.prototype, "metallicity", {
+        get: function get() {
+            var metallicity = this.stars[0].metallicity;
+            for (var _i = 0, _a = this.stars; _i < _a.length; _i++) {
+                var s = _a[_i];
+                metallicity = Math.max(metallicity, s.metallicity);
+            }
+            return metallicity;
+        },
+        enumerable: true,
+        configurable: true
+    });
     return StarSystem;
 }();
 exports.StarSystem = StarSystem;
-},{"alea":"../node_modules/alea/alea.js","./stars":"stars.ts"}],"index.ts":[function(require,module,exports) {
+},{"alea":"../node_modules/alea/alea.js","./stars":"stars.ts","./planets":"planets.ts","./weightedChoice":"weightedChoice.ts"}],"index.ts":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
@@ -429,10 +798,6 @@ if (main) {
         systemEl.className = 'system';
         for (var _i = 0, _a = system.stars; _i < _a.length; _i++) {
             var star = _a[_i];
-            // const labelEl = document.createElement('div');
-            // labelEl.innerHTML = star.starType;
-            // labelEl.style.textAlign = 'center';
-            // systemEl.appendChild(labelEl);
             var starEl = document.createElement('div');
             systemEl.appendChild(starEl);
             starEl.className = 'star';
@@ -440,16 +805,100 @@ if (main) {
             starEl.innerHTML = star.starType == stars_1.StarType.M ? "" : star.starType;
             starEl.title = JSON.stringify(star, null, 2);
             var minStarSize = 0.08;
-            var minPixelSize = 5;
+            var minPixelSize = 3;
             var w = minPixelSize / minStarSize * star.radius;
             starEl.style.width = w.toString() + 'px';
             starEl.style.height = w.toString() + 'px';
             starEl.style.borderRadius = (w / 2).toString() + 'px';
             // console.table(system.stars[0]);
         }
+        var separatorEl = document.createElement('div');
+        systemEl.appendChild(separatorEl);
+        separatorEl.className = 'planet-separator';
+        var planetsEl = document.createElement('div');
+        systemEl.appendChild(planetsEl);
+        planetsEl.className = 'planets-container';
+        var distanceFactor = 50;
+        var hzEl = document.createElement('div');
+        planetsEl.appendChild(hzEl);
+        hzEl.className = 'hz-indicator';
+        var _b = stars_1.computeHabitableZone(system.stars[0].starType, system.stars[0].luminosity),
+            hzMin = _b[0],
+            hzMax = _b[1];
+        hzEl.style.left = hzMin * distanceFactor + "px";
+        hzEl.style.width = (hzMax - hzMin) * distanceFactor + "px";
+        var maxDistance = 1;
+        for (var _c = 0, _d = system.planets; _c < _d.length; _c++) {
+            var planet = _d[_c];
+            var planetEl = document.createElement('div');
+            planetsEl.appendChild(planetEl);
+            planetEl.className = "planet-" + planet.planetType.toString().toLowerCase();
+            planetEl.style.position = 'absolute';
+            planetEl.style.left = planet.distance * distanceFactor + "px";
+            planetEl.title = JSON.stringify(planet, null, 2);
+            maxDistance = Math.max(maxDistance, planet.distance);
+            planetsEl.style.backgroundColor = 'lightblue';
+        }
+        planetsEl.style.width = maxDistance * distanceFactor + 100 + "px";
         main.appendChild(systemEl);
     }
 }
+// Dumb visual check of the metallicity probability distribution
+function testMetallicity() {
+    if (document.body.children[0].tagName == 'CANVAS') {
+        document.body.removeChild(document.body.children[0]);
+    }
+    var buckets = {};
+    var maxCount = 0;
+    var min = 0;
+    var max = 0;
+    var mult = 100;
+    for (var i = 0; i < 100000; i++) {
+        var val = stars_1.getMetallicityValue(Math.random(), Math.random());
+        var roundedVal = Math.floor(val * mult) / mult;
+        min = Math.min(min, roundedVal);
+        max = Math.max(max, roundedVal);
+        if (!buckets[roundedVal]) buckets[roundedVal] = 0;
+        buckets[roundedVal] += 1;
+        maxCount = Math.max(maxCount, buckets[roundedVal]);
+    }
+    console.log(maxCount);
+    var height = 200;
+    var factor = height / maxCount;
+    var canvasEl = document.createElement('canvas');
+    canvasEl.width = (max - min) * mult;
+    canvasEl.height = height;
+    canvasEl.style.backgroundColor = 'white';
+    var ctx = canvasEl.getContext('2d');
+    if (!ctx) return;
+    ctx.fillStyle = 'black';
+    for (var i = min * mult; i < max * mult; i += 1) {
+        var k = i / mult;
+        var val = buckets[k];
+        switch (k) {
+            case 0:
+                ctx.fillStyle = 'red';
+                break;
+            case 0.3:
+            case -0.45:
+                ctx.fillStyle = 'lightgreen';
+                break;
+            case 1:
+                ctx.fillStyle = 'cyan';
+                break;
+            case -1:
+                ctx.fillStyle = 'yellow';
+                break;
+            default:
+                ctx.fillStyle = 'black';
+                break;
+        }
+        ctx.fillRect(i - min * mult, height - val * factor, 1, val * factor);
+    }
+    console.log(buckets);
+    document.body.insertBefore(canvasEl, document.body.children[0]);
+}
+// testMetallicity();
 },{"./stars":"stars.ts","./starSystem":"starSystem.ts"}],"../node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
@@ -479,7 +928,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = '' || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + '54643' + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + '64926' + '/');
   ws.onmessage = function (event) {
     var data = JSON.parse(event.data);
 

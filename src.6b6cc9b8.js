@@ -103,7 +103,131 @@ parcelRequire = (function (modules, cache, entry, globalName) {
 
   // Override the current require with this new one
   return newRequire;
-})({"../node_modules/alea/alea.js":[function(require,module,exports) {
+})({"weightedChoice.ts":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+function weightedRandom(weights, normalizedValue) {
+    var sumOfWeights = 0;
+    for (var _i = 0, weights_1 = weights; _i < weights_1.length; _i++) {
+        var item = weights_1[_i];
+        sumOfWeights += item[1];
+    }
+    var randomValue = normalizedValue * sumOfWeights;
+    var sumSoFar = 0;
+    for (var _a = 0, weights_2 = weights; _a < weights_2.length; _a++) {
+        var _b = weights_2[_a],
+            value = _b[0],
+            weight = _b[1];
+        sumSoFar += weight;
+        if (randomValue <= sumSoFar) {
+            return value;
+        }
+    }
+    throw new Error("Choice error: " + randomValue);
+}
+exports.default = weightedRandom;
+},{}],"stars.ts":[function(require,module,exports) {
+"use strict";
+
+var __importDefault = this && this.__importDefault || function (mod) {
+    return mod && mod.__esModule ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+var weightedChoice_1 = __importDefault(require("./weightedChoice"));
+function normalizedToRange(min, max, val) {
+    return min + (max - min) * val;
+}
+/* STARS */
+var StarType;
+(function (StarType) {
+    /* Planets in HZ will be tidally locked very quickly
+     */
+    StarType["M"] = "M";
+    /* Starting to look good. Kepler searches star types K-F.
+     */
+    StarType["K"] = "K";
+    StarType["G"] = "G";
+    StarType["F"] = "F";
+    /* Stars age too quickly - only support life for about 2 billion years. Life may
+       be microbial, but likely no trees.
+     */
+    StarType["A"] = "A";
+    StarType["B"] = "B";
+    /*
+    Planetary dust disks located within 1.6 light-years of O-type stars are
+    likely to be "boiled off" by superhot radiation and winds
+    (therefore O-type stars likely won't have planets)
+    */
+    StarType["O"] = "O";
+})(StarType = exports.StarType || (exports.StarType = {}));
+// http://lup.lub.lu.se/luur/download?func=downloadFile&recordOId=8867455&fileOId=8870454
+exports.StarTypeProbabilities = new Map([[StarType.M, 0.7645629], [StarType.K, 0.1213592], [StarType.G, 0.0764563], [StarType.F, 0.0303398], [StarType.A, 0.0060679], [StarType.B, 0.0012136], [StarType.O, 0.0000003]]);
+exports.StarTemperature = new Map([[StarType.M, 3850], [StarType.K, 5300], [StarType.G, 5920], [StarType.F, 7240], [StarType.A, 9500], [StarType.B, 31000], [StarType.O, 41000]]);
+exports.StarLuminosityMin = new Map([[StarType.M, 0.000158], [StarType.K, 0.086], [StarType.G, 0.58], [StarType.F, 1.54], [StarType.A, 4.42], [StarType.B, 21.2], [StarType.O, 26800]]);
+exports.StarLuminosityMax = new Map([[StarType.M, 0.086], [StarType.K, 0.58], [StarType.G, 1.54], [StarType.F, 4.42], [StarType.A, 21.2], [StarType.B, 26800], [StarType.O, 78100000]]);
+exports.StarRadiusMin = new Map([[StarType.M, 0.08], [StarType.K, 0.7], [StarType.G, 0.96], [StarType.F, 1.15], [StarType.A, 1.4], [StarType.B, 1.8], [StarType.O, 6.6]]);
+exports.StarRadiusMax = new Map([[StarType.M, 0.7], [StarType.K, 0.96], [StarType.G, 1.15], [StarType.F, 1.4], [StarType.A, 1.8], [StarType.B, 6.6], [StarType.O, 12]]);
+// http://www.vendian.org/mncharity/dir3/starcolor/
+exports.StarColors = new Map([[StarType.O, '#9bb0ff'], [StarType.B, '#aabfff'], [StarType.A, '#cad7ff'], [StarType.F, '#f8f7ff'], [StarType.G, '#fff4ea'], [StarType.K, '#ffd2a1'], [StarType.M, '#ffcc6f']]);
+// http://www.solstation.com/habitable.htm
+/**
+* ~44% of F6-K3 stars with 0.5-1.5 stellar masses are likely binary/multiple star systems,
+* making stable orbits extremely unlikely unless the stars are close together.
+*
+* Inside HZ: "water is broken up by stellar radiation into oxygen and hydrogen...
+* the freed hydrogen would escape to space due to the relatively puny
+* gravitational pull of small rocky planets like Earth"
+*
+* Outside HZ: "atmospheric carbon dioxide condenses...which eliminates its
+* greenhouse warming effect."
+*
+* Stars get brighter as they age, so HZ expands outward. CHZ = "continuously habitable zone"
+* over time.
+*/
+exports.HabitableZonePlanetLikelihoods = new Map([[StarType.M, 0.0002], [StarType.K, 0.001], [StarType.G, 0.002], [StarType.F, 0.001],
+// my sources don't discuss these star types, and they are rare, so just pick
+// some random small values
+[StarType.A, 0.0002], [StarType.B, 0.00015], [StarType.O, 0.0001]]);
+// "normalized solar flux factor"
+// http://www.solstation.com/habitable.htm
+var SeffInner = new Map([[StarType.M, 1.05], [StarType.K, 1.05], [StarType.G, 1.41], [StarType.F, 1.9], [StarType.A, 0], [StarType.B, 0], [StarType.O, 0]]);
+var SeffOuter = new Map([[StarType.M, 0.27], [StarType.K, 0.27], [StarType.G, 0.36], [StarType.F, 0.46], [StarType.A, 0], [StarType.B, 0], [StarType.O, 0]]);
+function computeHabitableZoneHelper(luminosity, seff) {
+    return 1 * Math.pow(luminosity / seff, 0.5);
+}
+function computeHabitableZone(t, luminosity) {
+    return [computeHabitableZoneHelper(luminosity, SeffInner.get(t)), computeHabitableZoneHelper(luminosity, SeffOuter.get(t))];
+}
+exports.computeHabitableZone = computeHabitableZone;
+/*
+// this is garbage and wrong, don't use this
+export function computeRadius(t: StarType, luminosity: number): number {
+  const temperature = StarTemperature.get(t)!;
+  const tempRatio = temperature / StarTemperature.get(StarType.G)!
+
+  return Math.sqrt(Math.pow(tempRatio, 4) / luminosity);
+}
+*/
+var Star = /** @class */function () {
+    function Star(alea) {
+        var weights = Array();
+        exports.StarTypeProbabilities.forEach(function (v, k) {
+            weights.push([k, v]);
+        });
+        this.starType = weightedChoice_1.default(weights, alea());
+        // StarTypeProbabilities.keys().map((k: StarType) => []), alea);
+        this.color = exports.StarColors.get(this.starType);
+        var sizeValue = alea();
+        this.luminosity = normalizedToRange(exports.StarLuminosityMin.get(this.starType), exports.StarLuminosityMax.get(this.starType), sizeValue);
+        this.radius = normalizedToRange(exports.StarRadiusMin.get(this.starType), exports.StarRadiusMax.get(this.starType), sizeValue);
+        // https://en.wikipedia.org/wiki/Mass%E2%80%93luminosity_relation
+        this.mass = Math.pow(this.luminosity, 1 / 3.5);
+    }
+    return Star;
+}();
+exports.Star = Star;
+},{"./weightedChoice":"weightedChoice.ts"}],"../node_modules/alea/alea.js":[function(require,module,exports) {
 var define;
 (function (root, factory) {
   if (typeof exports === 'object') {
@@ -215,132 +339,7 @@ var define;
   }
 }));
 
-},{}],"weightedRandom.ts":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-function weightedRandom(weights, prng) {
-    if (prng === void 0) {
-        prng = null;
-    }
-    var sumOfWeights = 0;
-    for (var _i = 0, weights_1 = weights; _i < weights_1.length; _i++) {
-        var item = weights_1[_i];
-        sumOfWeights += item[1];
-    }
-    var randomValue = (prng ? prng() : Math.random()) * sumOfWeights;
-    var sumSoFar = 0;
-    for (var _a = 0, weights_2 = weights; _a < weights_2.length; _a++) {
-        var _b = weights_2[_a],
-            value = _b[0],
-            weight = _b[1];
-        sumSoFar += weight;
-        if (randomValue <= sumSoFar) {
-            return value;
-        }
-    }
-    throw new Error("Choice error: " + randomValue);
-}
-exports.default = weightedRandom;
-},{}],"stars.ts":[function(require,module,exports) {
-"use strict";
-
-var __importDefault = this && this.__importDefault || function (mod) {
-    return mod && mod.__esModule ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-var weightedRandom_1 = __importDefault(require("./weightedRandom"));
-function normalizedToRange(min, max, val) {
-    return min + (max - min) * val;
-}
-/* STARS */
-var StarType;
-(function (StarType) {
-    /* Planets in HZ will be tidally locked very quickly
-     */
-    StarType["M"] = "M";
-    /* Starting to look good. Kepler searches star types K-F.
-     */
-    StarType["K"] = "K";
-    StarType["G"] = "G";
-    StarType["F"] = "F";
-    /* Stars age too quickly - only support life for about 2 billion years. Life may
-       be microbial, but likely no trees.
-     */
-    StarType["A"] = "A";
-    StarType["B"] = "B";
-    /*
-    Planetary dust disks located within 1.6 light-years of O-type stars are
-    likely to be "boiled off" by superhot radiation and winds
-    (therefore O-type stars likely won't have planets)
-    */
-    StarType["O"] = "O";
-})(StarType = exports.StarType || (exports.StarType = {}));
-// http://lup.lub.lu.se/luur/download?func=downloadFile&recordOId=8867455&fileOId=8870454
-exports.StarTypeProbabilities = new Map([[StarType.M, 0.7645629], [StarType.K, 0.1213592], [StarType.G, 0.0764563], [StarType.F, 0.0303398], [StarType.A, 0.0060679], [StarType.B, 0.0012136], [StarType.O, 0.0000003]]);
-exports.StarTemperature = new Map([[StarType.M, 3850], [StarType.K, 5300], [StarType.G, 5920], [StarType.F, 7240], [StarType.A, 9500], [StarType.B, 31000], [StarType.O, 41000]]);
-exports.StarLuminosityMin = new Map([[StarType.M, 0.000158], [StarType.K, 0.086], [StarType.G, 0.58], [StarType.F, 1.54], [StarType.A, 4.42], [StarType.B, 21.2], [StarType.O, 26800]]);
-exports.StarLuminosityMax = new Map([[StarType.M, 0.086], [StarType.K, 0.58], [StarType.G, 1.54], [StarType.F, 4.42], [StarType.A, 21.2], [StarType.B, 26800], [StarType.O, 78100000]]);
-exports.StarRadiusMin = new Map([[StarType.M, 0.08], [StarType.K, 0.7], [StarType.G, 0.96], [StarType.F, 1.15], [StarType.A, 1.4], [StarType.B, 1.8], [StarType.O, 6.6]]);
-exports.StarRadiusMax = new Map([[StarType.M, 0.7], [StarType.K, 0.96], [StarType.G, 1.15], [StarType.F, 1.4], [StarType.A, 1.8], [StarType.B, 6.6], [StarType.O, 12]]);
-// http://www.vendian.org/mncharity/dir3/starcolor/
-exports.StarColors = new Map([[StarType.O, '#9bb0ff'], [StarType.B, '#aabfff'], [StarType.A, '#cad7ff'], [StarType.F, '#f8f7ff'], [StarType.G, '#fff4ea'], [StarType.K, '#ffd2a1'], [StarType.M, '#ffcc6f']]);
-// http://www.solstation.com/habitable.htm
-/**
-* ~44% of F6-K3 stars with 0.5-1.5 stellar masses are likely binary/multiple star systems,
-* makin stable orbits extremely unlikely unless the stars are close together.
-*
-* Inside HZ: "water is broken up by stellar radiation into oxygen and hydrogen...
-* the freed hydrogen would escape to space due to the relatively puny
-* gravitational pull of small rocky planets like Earth"
-*
-* Outside HZ: "atmospheric carbon dioxide condenses...which eliminates its
-* greenhouse warming effect."
-*
-* Stars get brighter as they age, so HZ expands outward. CHZ = "continuously habitable zone"
-* over time.
-*/
-exports.HabitableZonePlanetLikelihoods = new Map([[StarType.M, 0.0002], [StarType.K, 0.001], [StarType.G, 0.002], [StarType.F, 0.001],
-// my sources don't discuss these star types, and they are rare, so just pick
-// some random small values
-[StarType.A, 0.0002], [StarType.B, 0.00015], [StarType.O, 0.0001]]);
-// "normalized solar flux factor"
-// http://www.solstation.com/habitable.htm
-var SeffInner = new Map([[StarType.M, 1.05], [StarType.K, 1.05], [StarType.G, 1.41], [StarType.F, 1.9], [StarType.A, 0], [StarType.B, 0], [StarType.O, 0]]);
-var SeffOuter = new Map([[StarType.M, 0.27], [StarType.K, 0.27], [StarType.G, 0.36], [StarType.F, 0.46], [StarType.A, 0], [StarType.B, 0], [StarType.O, 0]]);
-function computeHabitableZoneHelper(luminosity, seff) {
-    return 1 * Math.pow(luminosity / seff, 0.5);
-}
-function computeHabitableZone(t, luminosity) {
-    return [computeHabitableZoneHelper(luminosity, SeffInner.get(t)), computeHabitableZoneHelper(luminosity, SeffOuter.get(t))];
-}
-exports.computeHabitableZone = computeHabitableZone;
-/*
-// this is garbage and wrong, don't use this
-export function computeRadius(t: StarType, luminosity: number): number {
-  const temperature = StarTemperature.get(t)!;
-  const tempRatio = temperature / StarTemperature.get(StarType.G)!
-
-  return Math.sqrt(Math.pow(tempRatio, 4) / luminosity);
-}
-*/
-var Star = /** @class */function () {
-    function Star(alea) {
-        var weights = Array();
-        exports.StarTypeProbabilities.forEach(function (v, k) {
-            weights.push([k, v]);
-        });
-        this.starType = weightedRandom_1.default(weights, alea);
-        // StarTypeProbabilities.keys().map((k: StarType) => []), alea);
-        this.color = exports.StarColors.get(this.starType);
-        var sizeValue = alea();
-        this.luminosity = normalizedToRange(exports.StarLuminosityMin.get(this.starType), exports.StarLuminosityMax.get(this.starType), sizeValue);
-        this.radius = normalizedToRange(exports.StarRadiusMin.get(this.starType), exports.StarRadiusMax.get(this.starType), sizeValue);
-    }
-    return Star;
-}();
-exports.Star = Star;
-},{"./weightedRandom":"weightedRandom.ts"}],"index.ts":[function(require,module,exports) {
+},{}],"starSystem.ts":[function(require,module,exports) {
 "use strict";
 
 var __importDefault = this && this.__importDefault || function (mod) {
@@ -349,9 +348,27 @@ var __importDefault = this && this.__importDefault || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 var alea_1 = __importDefault(require("alea"));
 var stars_1 = require("./stars");
-function percent(n) {
-    return n * 100 + '%';
-}
+var StarSystem = /** @class */function () {
+    function StarSystem(seed) {
+        this.seed = seed;
+        var alea = new alea_1.default(seed);
+        this.stars = [new stars_1.Star(alea)];
+        if (alea() > 0.5) {
+            this.stars.push(new stars_1.Star(alea));
+        }
+        this.stars.sort(function (a, b) {
+            return b.mass - a.mass;
+        });
+    }
+    return StarSystem;
+}();
+exports.StarSystem = StarSystem;
+},{"alea":"../node_modules/alea/alea.js","./stars":"stars.ts"}],"index.ts":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var stars_1 = require("./stars");
+var starSystem_1 = require("./starSystem");
 /// Tweak probability values to make planets more habitable and life-infested
 function cheatStars() {
     stars_1.StarTypeProbabilities.set(stars_1.StarType.K, stars_1.StarTypeProbabilities.get(stars_1.StarType.K) + 0.5);
@@ -365,21 +382,13 @@ function cheatStars() {
     }
 }
 // cheatStars();
-var StarSystem = /** @class */function () {
-    function StarSystem(seed) {
-        this.seed = seed;
-        var alea = new alea_1.default(seed);
-        this.stars = [new stars_1.Star(alea)];
-    }
-    return StarSystem;
-}();
 // main
 var main = document.getElementById("js-main");
 var seed = Date.now();
 if (main) {
     main.innerHTML = '';
     for (var i = 0; i < 102; i++) {
-        var system = new StarSystem(seed + i);
+        var system = new starSystem_1.StarSystem(seed + i);
         var systemEl = document.createElement('div');
         systemEl.className = 'system';
         for (var _i = 0, _a = system.stars; _i < _a.length; _i++) {
@@ -402,7 +411,7 @@ if (main) {
         main.appendChild(systemEl);
     }
 }
-},{"alea":"../node_modules/alea/alea.js","./stars":"stars.ts"}],"../node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+},{"./stars":"stars.ts","./starSystem":"starSystem.ts"}],"../node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 
@@ -431,7 +440,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = '' || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + '57455' + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + '57118' + '/');
   ws.onmessage = function (event) {
     var data = JSON.parse(event.data);
 

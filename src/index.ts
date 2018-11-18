@@ -1,15 +1,10 @@
 import Alea from "alea";
-import weightedRandom from "./weightedRandom";
 import {
     StarTypeProbabilities,
     StarType,
     HabitableZonePlanetLikelihoods,
-    Star,
 } from "./stars";
-
-function percent(n: number) {
-    return n * 100 + '%';
-}
+import {StarSystem} from "./starSystem";
 
 /// Tweak probability values to make planets more habitable and life-infested
 function cheatStars() {
@@ -24,20 +19,6 @@ function cheatStars() {
     }
 }
 // cheatStars();
-
-    
-class StarSystem {
-    seed: number;
-    stars: Array<Star>;
-
-    constructor(seed: number) {
-        this.seed = seed;
-
-        const alea = new (Alea as any)(seed);
-
-        this.stars = [new Star(alea)];
-    }
-}
 
 // main
 const main = document.getElementById("js-main");

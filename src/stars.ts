@@ -1,4 +1,4 @@
-import weightedRandom from "./weightedRandom";
+import weightedChoice from "./weightedChoice";
 
 function normalizedToRange(min: number, max: number, val: number): number {
   return min + (max - min) * val;
@@ -173,6 +173,7 @@ export function computeRadius(t: StarType, luminosity: number): number {
 export class Star {
     starType: StarType;
     luminosity: number;
+    mass: number;
     radius: number;
     color: string;
 
@@ -181,7 +182,7 @@ export class Star {
         StarTypeProbabilities.forEach((v: number, k: StarType) => {
           weights.push([k, v]);
         });
-        this.starType = weightedRandom(weights, alea);
+        this.starType = weightedChoice(weights, alea());
             // StarTypeProbabilities.keys().map((k: StarType) => []), alea);
         this.color = StarColors.get(this.starType)!;
 
@@ -194,5 +195,8 @@ export class Star {
           StarRadiusMin.get(this.starType)!,
           StarRadiusMax.get(this.starType)!,
           sizeValue);
+
+        // https://en.wikipedia.org/wiki/Mass%E2%80%93luminosity_relation
+        this.mass = Math.pow(this.luminosity, 1 / 3.5);
     }
 }

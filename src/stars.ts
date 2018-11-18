@@ -203,9 +203,16 @@ export function computeRadius(t: StarType, luminosity: number): number {
   Units are in [Fe/H], which you should google. It's a measure of the
   presence of iron vs the solar system on a logarithmic scale.
 */
-
-const MetallicityGaussianDistribution = gaussian(0.3, 0.3).scale(1.5)
-  .add(gaussian(-0.45, 0.7).scale(0.45));
+export function getMetallicityValue(aRandomNumber: number, n2: number): number {
+  const dist1 = gaussian(0.3, 0.1);
+  const dist2 = gaussian(-0.45, 0.1);
+  const val1 = dist1.ppf(aRandomNumber);
+  const val2 = dist2.ppf(aRandomNumber);
+  // According to stats.stackexchange.com there's a super mathy way to
+  // combine two Gaussian distributions, but using a weighted choice
+  // seems to produce similar results, so whatever.
+  return weightedChoice([[val1, 1.5], [val2, 0.5]], n2);
+}
 
 export class Star {
     starType: StarType;
@@ -234,6 +241,6 @@ export class Star {
           sizeValue);
         this.mass = computeMass(this.luminosity);
 
-        this.metallicity = MetallicityGaussianDistribution.ppf(getRandom())
+        this.metallicity = getMetallicityValue(getRandom(), getRandom());
     }
 }

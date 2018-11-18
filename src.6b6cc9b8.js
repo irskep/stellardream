@@ -200,6 +200,27 @@ function computeHabitableZone(t, luminosity) {
     return [computeHabitableZoneHelper(luminosity, SeffInner.get(t)), computeHabitableZoneHelper(luminosity, SeffOuter.get(t))];
 }
 exports.computeHabitableZone = computeHabitableZone;
+function computeMass(luminosity) {
+    // https://en.wikipedia.org/wiki/Mass%E2%80%93luminosity_relation
+    // and also 
+    // http://lup.lub.lu.se/luur/download?func=downloadFile&recordOId=8867455&fileOId=8870454
+    var a = 0.23;
+    var b = 2.3;
+    if (luminosity > 0.03) {
+        a = 1;
+        b = 4;
+    }
+    if (luminosity > 16) {
+        a = 1.5;
+        b = 3.5;
+    }
+    if (luminosity > 54) {
+        a = 3200;
+        b = 1;
+    }
+    return Math.pow(luminosity / a, b);
+}
+exports.computeMass = computeMass;
 /*
 // this is garbage and wrong, don't use this
 export function computeRadius(t: StarType, luminosity: number): number {
@@ -221,8 +242,7 @@ var Star = /** @class */function () {
         var sizeValue = alea();
         this.luminosity = normalizedToRange(exports.StarLuminosityMin.get(this.starType), exports.StarLuminosityMax.get(this.starType), sizeValue);
         this.radius = normalizedToRange(exports.StarRadiusMin.get(this.starType), exports.StarRadiusMax.get(this.starType), sizeValue);
-        // https://en.wikipedia.org/wiki/Mass%E2%80%93luminosity_relation
-        this.mass = Math.pow(this.luminosity, 1 / 3.5);
+        this.mass = computeMass(this.luminosity);
     }
     return Star;
 }();
@@ -353,12 +373,28 @@ var StarSystem = /** @class */function () {
         this.seed = seed;
         var alea = new alea_1.default(seed);
         this.stars = [new stars_1.Star(alea)];
-        if (alea() > 0.5) {
+        /*
+          Roughly 44% of star systems have two stars. The stars orbit each
+          other at distances of "zero-ish" to 1 light year. Alpha Centauri,
+          for example, has Proxima Centauri at 15,000 AU (~0.23 light years).
+           This model will only look at "close binaries" (hand-wavingly
+          estimated at half of binary systems), and say their planets are in
+          orbit of both stars simultaneously. Other binaries will be treated
+          like separate star systems. Research shows that even non-close
+          binaries make planetary orbits eccentric over time (billions of
+          years), but this would have no effect on colonization potential by
+          humans (I suppose) except as it relates to the development of
+          human-relevant life.
+         */
+        if (alea() > 0.22) {
             this.stars.push(new stars_1.Star(alea));
+            // One strategy for generating the second star would be to force
+            // it to be smaller than the first, but it's simpler to just
+            // generate them independently and sort by mass.
+            this.stars = this.stars.sort(function (a, b) {
+                return b.mass - a.mass;
+            });
         }
-        this.stars.sort(function (a, b) {
-            return b.mass - a.mass;
-        });
     }
     return StarSystem;
 }();
@@ -401,12 +437,15 @@ if (main) {
             systemEl.appendChild(starEl);
             starEl.className = 'star';
             starEl.style.backgroundColor = star.color;
-            starEl.innerHTML = star.starType;
-            var w = 10 / 0.08 * star.radius;
+            starEl.innerHTML = star.starType == stars_1.StarType.M ? "" : star.starType;
+            starEl.title = JSON.stringify(star, null, 2);
+            var minStarSize = 0.08;
+            var minPixelSize = 5;
+            var w = minPixelSize / minStarSize * star.radius;
             starEl.style.width = w.toString() + 'px';
             starEl.style.height = w.toString() + 'px';
             starEl.style.borderRadius = (w / 2).toString() + 'px';
-            console.table(system.stars[0]);
+            // console.table(system.stars[0]);
         }
         main.appendChild(systemEl);
     }
@@ -440,7 +479,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = '' || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + '57118' + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + '54643' + '/');
   ws.onmessage = function (event) {
     var data = JSON.parse(event.data);
 

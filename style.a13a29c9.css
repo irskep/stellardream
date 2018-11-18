@@ -6,12 +6,16 @@ html {
 .system {
     float: left;
     position: relative;
+    max-width: 500px;
+    max-height: 500px;
 
     /* display: flex;
     align-items: center;
     justify-content: center; */
 
     border: 1px solid white;
+
+    overflow: hidden;
 }
 
 .star {

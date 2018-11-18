@@ -30,4 +30,11 @@
     zone may lose their initial life-supporting atmosphere because of low
     gravity and/or the lack of plate tectonics needed to recycle
     heat-retaining carbon dioxide gas back into the atmosphere."
+
+    http://iopscience.iop.org/article/10.1086/428383/pdf
+
+    "One-quarter of the FGK-type stars with [Fe/H] > 0.3 dex harbor
+    Jupiter-like planets with orbital periods shorter than 4 yr. In
+    contrast, gas giant planets are detected around fewer than 3% of
+    the stars with subsolar metallicity. "
 */

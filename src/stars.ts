@@ -1,4 +1,5 @@
 import weightedChoice from "./weightedChoice";
+import gaussian from "gaussian";
 
 function normalizedToRange(min: number, max: number, val: number): number {
   return min + (max - min) * val;
@@ -183,6 +184,8 @@ export function computeMass(luminosity: number): number {
 
 /*
 // this is garbage and wrong, don't use this
+// might be able to salvage using this:
+// https://www.astro.princeton.edu/~gk/A403/constants.pdf
 export function computeRadius(t: StarType, luminosity: number): number {
   const temperature = StarTemperature.get(t)!;
   const tempRatio = temperature / StarTemperature.get(StarType.G)!
@@ -191,23 +194,36 @@ export function computeRadius(t: StarType, luminosity: number): number {
 }
 */
 
+/*
+  https://arxiv.org/pdf/1511.07438.pdf
+  
+  According to this paper, metallicity distribution is best represented
+  by a combination of two Gaussians.
+
+  Units are in [Fe/H], which you should google. It's a measure of the
+  presence of iron vs the solar system on a logarithmic scale.
+*/
+
+const MetallicityGaussianDistribution = gaussian(0.3, 0.3).scale(1.5)
+  .add(gaussian(-0.45, 0.7).scale(0.45));
+
 export class Star {
     starType: StarType;
     luminosity: number;
+    metallicity: number;
     mass: number;
     radius: number;
     color: string;
 
-    constructor(alea: any) {
+    constructor(getRandom: any) {
         let weights = Array<[StarType, number]>();
         StarTypeProbabilities.forEach((v: number, k: StarType) => {
           weights.push([k, v]);
         });
-        this.starType = weightedChoice(weights, alea());
-            // StarTypeProbabilities.keys().map((k: StarType) => []), alea);
+        this.starType = weightedChoice(weights, getRandom());
         this.color = StarColors.get(this.starType)!;
 
-        const sizeValue = alea();
+        const sizeValue = getRandom();
         this.luminosity = normalizedToRange(
           StarLuminosityMin.get(this.starType)!,
           StarLuminosityMax.get(this.starType)!,
@@ -216,7 +232,8 @@ export class Star {
           StarRadiusMin.get(this.starType)!,
           StarRadiusMax.get(this.starType)!,
           sizeValue);
-
         this.mass = computeMass(this.luminosity);
+
+        this.metallicity = MetallicityGaussianDistribution.ppf(getRandom())
     }
 }

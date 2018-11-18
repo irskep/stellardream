@@ -28,6 +28,7 @@
     "typescript": "^2.9.2"
   },
   "dependencies": {
-    "alea": "^1.0.0"
+    "alea": "^1.0.0",
+    "gaussian": "^1.1.0"
   }
 }

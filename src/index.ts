@@ -52,7 +52,7 @@ if (main) {
             starEl.style.height = w.toString() + 'px';
             starEl.style.borderRadius = (w / 2).toString() + 'px';
 
-            console.table(system.stars[0]);
+            // console.table(system.stars[0]);
         }
 
         main.appendChild(systemEl);

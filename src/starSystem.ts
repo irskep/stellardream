@@ -1,4 +1,5 @@
 import Alea from "alea";
+
 import {
     Star,
 } from "./stars";
@@ -34,7 +35,7 @@ export class StarSystem {
             // One strategy for generating the second star would be to force
             // it to be smaller than the first, but it's simpler to just
             // generate them independently and sort by mass.
-            this.stars.sort((a, b) => {
+            this.stars = this.stars.sort((a, b) => {
                 return b.mass - a.mass;
             });
         }

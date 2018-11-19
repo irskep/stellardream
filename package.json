@@ -8,13 +8,15 @@
   "files": [
     "bin/",
     "lib/",
-    "src/"
+    "src/",
+    "lib/"
   ],
   "name": "planetgen",
   "version": "0.1.0",
   "description": "",
   "main": "lib/planetgen.js",
   "scripts": {
+    "lib": "tsc",
     "serve": "parcel serve src/index.html",
     "build": "cross-env NODE_ENV=production parcel build src/index.html --public-url .",
     "watch": "parcel watch src/index.html",

@@ -88,7 +88,7 @@ export function addPlanets(starSystem: StarSystem, getRandom: () => number) {
         planetSlots.push(planetSlots[planetSlots.length - 1] / normalizedToRange(1.1, 2, getRandom()));
     }
     // Remember original slots so we can add placeholder planets later on as markers
-    const originalSlots = planetSlots.map((i) => i);
+    // const originalSlots = planetSlots.map((i) => i);
     planetSlots = shuffle(planetSlots);
 
     /*

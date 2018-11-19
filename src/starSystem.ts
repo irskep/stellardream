@@ -17,36 +17,30 @@ function shuffle<T>(a: Array<T>) {
 }
 
 /*
-    http://www.solstation.com/habitable.htm
+    https://www.gemini.edu/node/12025
 
-    "Thus far, no one theory has been able to make definitive predictions of the
-    frequency of planet formation nor of the distribution of planetary sizes and
-    orbits."
+    "In our search, we could have found gas giants beyond orbital distances
+    corresponding to Uranus and Neptune in our own Solar System, but we didn’t
+    find any."
+*/
 
-    "planetary systems may be more common around stars whose spectra show an
-    enriched abundance of elements heavier than hydrogen and helium -- also
-    called high 'metallicity'"
+/*
+    https://www.cfa.harvard.edu/news/2013-01
 
-    "Numerical modeling of the accumulation of planetesimals during molecular
-    cloud collapse have produced, on average, four rocky inner planets for models
-    similar to the Solar System. The results included two, roughly Earth-sized
-    planets and two smaller planets, where their orbital distance ranged between
-    that of Mercury (0.4 AU) and Mars (1.5 AU). Hence, some astronomers expect to
-    find rocky planets around other stars within that range of orbits."
+    "At Least One in Six Stars Has an Earth-sized Planet"
+*/
 
-    "NASA's Kepler Mission is defining the size of an Earth-type planet to be
-    those that have between 0.5 and 2.0 times Earth's mass, or those having
-    between 0.8 and 1.3 times Earth's radius or diameter. The mission will
-    also investigate larger terrestrial planets that have two to ten Earth
-    masses, or 1.3 to 2.2 times its radius/diameter. Larger planets, however,
-    will be excluded because they may have sufficient gravity to attract a
-    massive hydrogen-helium atmosphere like the gas giants. On the other
-    extreme, those planets -- like Mars or Mercury -- that have less than
-    half the Earth's mass and are located in or near their star's habitable
-    zone may lose their initial life-supporting atmosphere because of low
-    gravity and/or the lack of plate tectonics needed to recycle
-    heat-retaining carbon dioxide gas back into the atmosphere."
+/*
+    https://en.wikipedia.org/wiki/Circumbinary_planet
+    https://en.wikipedia.org/wiki/Habitability_of_binary_star_systems
 
+    Many restrictions on circumbinary planets have not been implemented here
+*/
+
+/*
+    https://www.manyworlds.space/index.php/2018/07/09/the-architecture-of-solar-systems/
+    
+    Planets seem to have similar sizes as their neighbors
 */
 
 export function addPlanets(starSystem: StarSystem, getRandom: () => number) {
@@ -67,30 +61,6 @@ export function addPlanets(starSystem: StarSystem, getRandom: () => number) {
         return;
     }
 
-    const [hzMin, hzMax] = computeHabitableZone(
-        starSystem.stars[0].starType, starSystem.stars[0].luminosity);
-
-    // Stick a planet slot in the habitable zone because I don't have anything
-    // else to go on. Then add slots toward and away from the sun based on
-    // the Titus-Bode law:
-    // https://en.wikipedia.org/wiki/Titius%E2%80%93Bode_law
-    // According to this paper it's pretty darn accurate:
-    // https://watermark.silverchair.com/stt1357.pdf?token=AQECAHi208BE49Ooan9kkhW_Ercy7Dm3ZL_9Cf3qfKAc485ysgAAAkYwggJCBgkqhkiG9w0BBwagggIzMIICLwIBADCCAigGCSqGSIb3DQEHATAeBglghkgBZQMEAS4wEQQMXXlXIp7_lwD8QJsjAgEQgIIB-Z96njhcrt4HyhJSQ_02byW4uXVLfJlgORYjKns4IgHZ7hOohpgBhhuilHJ9CqVseHjZ2gRc6UxJ9zbWPMSEbR2ccKm93ziwbQIfl0cP7lLi50lTyffZyuW4klH9hF5usqCbX3mVLhrMVLaHRqpHY9ciTzJnLosk_FJJbYNV_OkvruGc0uY_6EtOkt13FZRxTG-Of3T9CfZj2L6PMTZxVTOMP-xY8TEDr20Kgxkwp-0DA9Lbec4SBgaEAMYSo8FJDHH_VZqYUE4H5BoUk3MRzaIbmGfCxttLGm96f-Pa0uYneyt6XZFXSUj9X7kAcN1wO0ul3pLBmhhY8dGYF_dFNKOnV3Q4O5yaFjtsJXrJheJh82UsyYmZo36QaZIC8c7h5fDluDz51JM-n_pdaI_Nj6DKXk1eisgd5wLj3MeZappwhTVDsRZnyfhLRkW6VWb0bm-FzcjEw6KvOZtJh9D7-jPyqc4Qnpdt5jLXyLqXJDOlUH1IYf0fJf1k_cw1jAPMHveHHEGrxwpZ1Jee7Q7gR1hZwkVBC4BzPq2K9a22SJ8Jgktr5PHi7RXSTeXVa9mlDTM8uqnXmwYdAu_y3SeyPvIJL7LZ7KKh_Z7FPqIwMjUHWDrY20FWHUl9oRlqthDT9CgEW1ECV9h6-MfEUlKMXUKf92FKxzICRlk
-
-    const planetAnchor = normalizedToRange(hzMin, hzMax, getRandom());
-    let planetSlots = [planetAnchor];
-    // Add 6 slots away from the star (solar system value + 1)
-    for (let i=0; i<5; i++) {
-        planetSlots.unshift(planetSlots[0] * normalizedToRange(1.1, 2, getRandom()));
-    }
-    // Add 4 slots close to the star (solar system value + 1)
-    for (let i=0; i<5; i++) {
-        planetSlots.push(planetSlots[planetSlots.length - 1] / normalizedToRange(1.1, 2, getRandom()));
-    }
-    // Remember original slots so we can add placeholder planets later on as markers
-    // const originalSlots = planetSlots.map((i) => i);
-    planetSlots = shuffle(planetSlots);
-
     /*
         http://iopscience.iop.org/article/10.1086/428383/pdf
         https://arxiv.org/pdf/1511.07438.pdf
@@ -106,24 +76,41 @@ export function addPlanets(starSystem: StarSystem, getRandom: () => number) {
     strategy. If a star has high metallicity, we'll say gas giant probability
     per plant is 30%; otherwise it'll be 6%.
     */
-   const jovianWeight = starSystem.metallicity >= 0 ? 0.3 : 0.04;
+    const jovianWeight = starSystem.metallicity >= 0 ? 0.3 : 0.04;
+    // The others are eyeballed figures from https://www.popularmechanics.com/space/deep-space/a13733860/all-the-exoplanets-weve-discovered-in-one-small-chart/
+    const terrainWeight = 0.3;
+    const neptunianWeight = 0.6;
 
-   // Eyeballed figures from https://www.popularmechanics.com/space/deep-space/a13733860/all-the-exoplanets-weve-discovered-in-one-small-chart/
-   const terrainWeight = 0.3;
-   const neptunianWeight = 0.6;
+    const [hzMin, hzMax] = computeHabitableZone(
+        starSystem.stars[0].starType, starSystem.stars[0].luminosity);
 
-    const hzSlots = planetSlots.filter((dist) => dist > hzMin && dist < hzMax);
-    const hotSlots = planetSlots.filter((dist) => dist <= hzMin);
-    const coldSlots = planetSlots.filter((dist) => dist >= hzMax);
+    // Stick a planet slot in the habitable zone because I don't have anything
+    // else to go on. Then add slots toward and away from the sun based on
+    // the Titus-Bode law:
+    // https://en.wikipedia.org/wiki/Titius%E2%80%93Bode_law
+    // According to this paper it's pretty darn accurate:
+    // https://watermark.silverchair.com/stt1357.pdf?token=AQECAHi208BE49Ooan9kkhW_Ercy7Dm3ZL_9Cf3qfKAc485ysgAAAkYwggJCBgkqhkiG9w0BBwagggIzMIICLwIBADCCAigGCSqGSIb3DQEHATAeBglghkgBZQMEAS4wEQQMXXlXIp7_lwD8QJsjAgEQgIIB-Z96njhcrt4HyhJSQ_02byW4uXVLfJlgORYjKns4IgHZ7hOohpgBhhuilHJ9CqVseHjZ2gRc6UxJ9zbWPMSEbR2ccKm93ziwbQIfl0cP7lLi50lTyffZyuW4klH9hF5usqCbX3mVLhrMVLaHRqpHY9ciTzJnLosk_FJJbYNV_OkvruGc0uY_6EtOkt13FZRxTG-Of3T9CfZj2L6PMTZxVTOMP-xY8TEDr20Kgxkwp-0DA9Lbec4SBgaEAMYSo8FJDHH_VZqYUE4H5BoUk3MRzaIbmGfCxttLGm96f-Pa0uYneyt6XZFXSUj9X7kAcN1wO0ul3pLBmhhY8dGYF_dFNKOnV3Q4O5yaFjtsJXrJheJh82UsyYmZo36QaZIC8c7h5fDluDz51JM-n_pdaI_Nj6DKXk1eisgd5wLj3MeZappwhTVDsRZnyfhLRkW6VWb0bm-FzcjEw6KvOZtJh9D7-jPyqc4Qnpdt5jLXyLqXJDOlUH1IYf0fJf1k_cw1jAPMHveHHEGrxwpZ1Jee7Q7gR1hZwkVBC4BzPq2K9a22SJ8Jgktr5PHi7RXSTeXVa9mlDTM8uqnXmwYdAu_y3SeyPvIJL7LZ7KKh_Z7FPqIwMjUHWDrY20FWHUl9oRlqthDT9CgEW1ECV9h6-MfEUlKMXUKf92FKxzICRlk
+
+    const planetAnchor = normalizedToRange(hzMin, hzMax, getRandom());
+    const numHotSlots = 5;
+    const numColdSlots = 5;
+    let planetSlots = [planetAnchor];
+
+    // Add slots away from the star
+    for (let i=0; i<numColdSlots; i++) {
+        planetSlots.push(planetSlots[planetSlots.length - 1] * normalizedToRange(1.1, 2, getRandom()));
+    }
+    // Add slots close to the star
+    for (let i=0; i<numHotSlots; i++) {
+        planetSlots.unshift(planetSlots[0] / normalizedToRange(1.1, 2, getRandom()));
+    }
 
     /*
-
         https://www.nasa.gov/mission_pages/kepler/news/17-percent-of-stars-have-earth-size-planets.html
 
         "Extrapolating from Kepler's currently ongoing observations and results
         from other detection techniques, scientists have determined that nearly
         all sun-like stars have planets."
-
     */
 
     /*
@@ -153,35 +140,34 @@ export function addPlanets(starSystem: StarSystem, getRandom: () => number) {
         Mercury-like orbit, and that small HZ planets around M dwarfs abound."
     */
 
-    /*
-    The way that all gets captured here is to just pick random planet slots
-    and put planets in them.
-
-    ~50% of planet slots are "close" orbits (HZ or closer), which captures
-    the M-type data pretty well, and since other star types have habitable
-    zones farther out, that will naturally push all the planet slots outward
-    as well.
-    */
-
     const planetTypeChoices: Array<[PlanetType, number]> = [
         [PlanetType.Terran, terrainWeight],
         [PlanetType.Neptunian, neptunianWeight],
         [PlanetType.Jovian, jovianWeight],
     ]
 
-    // As mentioned earlier, half of dwarf stars have a Terran planet
-    // in their HZs. For other stars, just do something random.
-    if (starSystem.stars[0].starType == StarType.M) {
+    let start = Math.floor(normalizedToRange(2, planetSlots.length - 2, getRandom()));
+    const forceHZTerran = starSystem.stars[0].starType == StarType.M && getRandom() < 0.5;
+    if (forceHZTerran) {
+        start = numHotSlots;
+    }
+    let left = start;
+    let right = start;
+
+    function makePlanet(i: number, t?: PlanetType) {
+        let starType = weightedRandom(planetTypeChoices, getRandom());
+        if (t) { starType = t; }
         starSystem.planets.push(new Planet(
-            weightedRandom(planetTypeChoices, getRandom()),
+            starType,
             starSystem.stars[0],
-            hzSlots.pop()!));
-        planetSlots = hzSlots.concat(hotSlots).concat(coldSlots);
+            planetSlots[i]));
+    }
+
+    if (forceHZTerran) {
+        console.log(planetSlots[start] > hzMin, planetSlots[start] < hzMax, planetSlots[start], planetAnchor);
+        makePlanet(start, PlanetType.Terran);
     } else {
-        starSystem.planets.push(new Planet(
-            weightedRandom(planetTypeChoices, getRandom()),
-            starSystem.stars[0],
-            planetSlots.pop()!));
+        makePlanet(start);
     }
 
     // https://www.nasa.gov/image-feature/ames/planetary-systems-by-number-of-known-planets
@@ -190,11 +176,18 @@ export function addPlanets(starSystem: StarSystem, getRandom: () => number) {
     // of continuing our planet-adding loop each time.
     // And FYI, it's totally fine to have 2+ gas giants in a system. This paper
     // describes one with SIX: https://arxiv.org/pdf/1710.07337.pdf
-    while (planetSlots.length > 0 && getRandom() < 0.3) {
-        starSystem.planets.push(new Planet(
-            weightedRandom(planetTypeChoices, getRandom()),
-            starSystem.stars[0],
-            planetSlots.pop()!));
+    while(getRandom() < 0.3) {
+        left -= 1;
+        // Skip a slot sometimes just for fun
+        if (left > 0 && getRandom() < 0.5) left -= 1;
+        makePlanet(left);
+    }
+
+    while(getRandom() < 0.3) {
+        right += 1;
+        // Skip a slot sometimes just for fun
+        if (right < planetSlots.length - 1 && getRandom() < 0.5) right += 1;
+        makePlanet(right);
     }
 
     // for (let s of originalSlots) {
@@ -223,7 +216,7 @@ export class StarSystem {
           for example, has Proxima Centauri at 15,000 AU (~0.23 light years).
 
           This model will only look at "close binaries" (hand-wavingly
-          estimated at half of binary systems), and say their planets are in
+          estimated at 1/4 of binary systems), and say their planets are in
           orbit of both stars simultaneously. Other binaries will be treated
           like separate star systems. Research shows that even non-close
           binaries make planetary orbits eccentric over time (billions of
@@ -231,7 +224,7 @@ export class StarSystem {
           humans (I suppose) except as it relates to the development of
           human-relevant life.
          */
-        if (alea() > 0.22) {
+        if (alea() < 0.25) {
             this.stars.push(new Star(alea));
             // this.metallicity = Math.max(this.metallicity, this.stars[1].metallicity);
 

@@ -8,13 +8,13 @@ function normalizedToRange(min: number, max: number, val: number): number {
   return min + (max - min) * val;
 }
 
-function shuffle<T>(a: Array<T>) {
-    for (let i = a.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [a[i], a[j]] = [a[j], a[i]];
-    }
-    return a;
-}
+// function shuffle<T>(a: Array<T>) {
+//     for (let i = a.length - 1; i > 0; i--) {
+//         const j = Math.floor(Math.random() * (i + 1));
+//         [a[i], a[j]] = [a[j], a[i]];
+//     }
+//     return a;
+// }
 
 /*
     https://www.gemini.edu/node/12025
@@ -155,6 +155,9 @@ export function addPlanets(starSystem: StarSystem, getRandom: () => number) {
     let right = start;
 
     function makePlanet(i: number, t?: PlanetType) {
+        if (i < 0 || i >= planetSlots.length) {
+            debugger;
+        }
         let starType = weightedRandom(planetTypeChoices, getRandom());
         if (t) { starType = t; }
         starSystem.planets.push(new Planet(
@@ -164,7 +167,6 @@ export function addPlanets(starSystem: StarSystem, getRandom: () => number) {
     }
 
     if (forceHZTerran) {
-        console.log(planetSlots[start] > hzMin, planetSlots[start] < hzMax, planetSlots[start], planetAnchor);
         makePlanet(start, PlanetType.Terran);
     } else {
         makePlanet(start);
@@ -176,14 +178,14 @@ export function addPlanets(starSystem: StarSystem, getRandom: () => number) {
     // of continuing our planet-adding loop each time.
     // And FYI, it's totally fine to have 2+ gas giants in a system. This paper
     // describes one with SIX: https://arxiv.org/pdf/1710.07337.pdf
-    while(getRandom() < 0.3) {
+    while(getRandom() < 0.3 && left > 0) {
         left -= 1;
         // Skip a slot sometimes just for fun
         if (left > 0 && getRandom() < 0.5) left -= 1;
         makePlanet(left);
     }
 
-    while(getRandom() < 0.3) {
+    while(getRandom() < 0.3 && right < planetSlots.length - 1) {
         right += 1;
         // Skip a slot sometimes just for fun
         if (right < planetSlots.length - 1 && getRandom() < 0.5) right += 1;

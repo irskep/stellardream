@@ -27,8 +27,14 @@ const seed = Date.now();
 
 if (main) {
     main.innerHTML = '';
+    let j = 0;
     for (let i=0; i<102; i++) {
-        const system = new StarSystem(seed + i);
+        let system = new StarSystem(seed + j);
+        j += 1;
+        while (system.planets.length < 4) {
+            system = new StarSystem(seed + i + j);
+            j += 1;
+        }
 
         const systemEl = document.createElement('div');
         systemEl.className = 'system';

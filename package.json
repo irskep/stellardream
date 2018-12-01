@@ -11,7 +11,7 @@
     "src/",
     "lib/"
   ],
-  "name": "starmaker",
+  "name": "stellardream",
   "version": "0.1.0",
   "description": "",
   "main": "lib/index.js",

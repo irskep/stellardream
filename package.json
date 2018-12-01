@@ -11,10 +11,10 @@
     "src/",
     "lib/"
   ],
-  "name": "planetgen",
+  "name": "starmaker",
   "version": "0.1.0",
   "description": "",
-  "main": "lib/planetgen.js",
+  "main": "lib/index.js",
   "scripts": {
     "lib": "tsc",
     "serve": "parcel serve src/index.html",

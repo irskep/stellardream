@@ -155,3 +155,7 @@ if (main) {
 //     document.body.insertBefore(canvasEl, document.body.children[0]);
 // }
 // testMetallicity();
+
+export {
+    StarSystem
+};

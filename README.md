@@ -1,58 +1,34 @@
-# parcel-typescript-example
+# Procedural star system generator
 
-A minimum TypeScript app with [Parcel Bundler](https://parceljs.org/).
+# Links
 
-## Source code
+This is missing a lot; the rest is in the comments.
 
-- [index.html](./src/index.html)
-- [index.ts](./src/index.ts)
-- [style.css](./src/style.css)
+## Prior art
 
-For more details, see [src/](./src/).
+- http://thrivegame.wikidot.com/procedural-planet-generator
 
-## Usage
+## Orbits
 
-### Installation
+- https://physics.stackexchange.com/questions/41020/what-is-the-relationship-between-mass-speed-and-distance-of-a-planet-orbiting-t
+- http://homepages.wmich.edu/~korista/Newton-Kepler.html
 
-    yarn install
+## Kepler data
 
-### Development
+- http://www.pnas.org/content/111/35/12647
+- http://phl.upr.edu/projects/habitable-exoplanets-catalog
 
-Launch development server.
+## Classification systems
 
-    yarn start
-    
-### Build
+- https://medium.com/starts-with-a-bang/sorry-super-earth-fans-there-are-only-three-classes-of-planet-44f3da47eb64
+- **https://arxiv.org/pdf/1603.08614v2.pdf%29**
+- http://phl.upr.edu/library/notes/amassclassificationforbothsolarandextrasolarplanets
 
-Compile TypeScript app and copy index.html to the `dist` folder.
+## Planet sizes and positions
 
-    yarn run build
-
-### Deploy
-
-Deploy `dist` folder to GitHub Pages.
-
-    yarn run deploy
-
-You can see the result in <https://azu.github.io/parcel-typescript-example/>.
-
-## Contributing
-
-Pull requests and stars are always welcome.
-
-For bugs and feature requests, [please create an issue](https://github.com/azu/parcel-typescript-example/issues).
-
-1. Fork it!
-2. Create your feature branch: `git checkout -b my-new-feature`
-3. Commit your changes: `git commit -am 'Add some feature'`
-4. Push to the branch: `git push origin my-new-feature`
-5. Submit a pull request :D
-
-## Author
-
-- [github/azu](https://github.com/azu)
-- [twitter/azu_re](https://twitter.com/azu_re)
-
-## License
-
-MIT © azu
+- https://www.manyworlds.space/index.php/2018/07/09/the-architecture-of-solar-systems/
+- https://www.manyworlds.space/index.php/2018/07/03/exoplanet-science-flying-high/
+- http://ifa.hawaii.edu/~howard/ast241/exoplanet_properties.pdf
+- https://www.nasa.gov/image-feature/ames/planetary-systems-by-number-of-known-planets
+- https://exoplanetarchive.ipac.caltech.edu/docs/counts_detail.html
+- https://phys.org/news/2017-06-kepler-taught-rocky-planets-common.html

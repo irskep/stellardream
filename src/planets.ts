@@ -1,20 +1,27 @@
 import { Star } from "./stars";
 
-export enum KeplerGrouping {
-    HotJupiter = "HotJupiter",
-    ColdGasGiant = "ColdGasGiant",
-    IceGiant = "IceGiant",
-    OceanWorld = "OceanWorld",
-    LavaWorld = "LavaWorld",
-    Rocky = "Rocky",
-}
-
 // https://medium.com/starts-with-a-bang/sorry-super-earth-fans-there-are-only-three-classes-of-planet-44f3da47eb64
 export enum PlanetType {
     Terran = "Terran",
     Neptunian = "Neptunian",
     Jovian = "Jovian",
     Placeholder = "Placeholder",
+}
+
+// unused; future work? comments map wonky infographic clusters onto PlanetType
+export enum KeplerGrouping {
+    // "big" jovians that are doing a fusion
+    HotJupiter = "HotJupiter",
+    // "small" jovians
+    ColdGasGiant = "ColdGasGiant",
+    // neptunes
+    IceGiant = "IceGiant",
+    // watery terrans
+    OceanWorld = "OceanWorld",
+    // mercury-sized terrans
+    LavaWorld = "LavaWorld",
+    // terrans
+    Rocky = "Rocky",
 }
 
 // Units: 10^x earth-masses

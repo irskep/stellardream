@@ -4,17 +4,10 @@ import {Star, StarType, computeHabitableZone} from "./stars";
 import {Planet, PlanetType} from "./planets";
 import weightedRandom from "./weightedChoice";
 
+/// Project a value 0-1 onto a range min-max
 function normalizedToRange(min: number, max: number, val: number): number {
   return min + (max - min) * val;
 }
-
-// function shuffle<T>(a: Array<T>) {
-//     for (let i = a.length - 1; i > 0; i--) {
-//         const j = Math.floor(Math.random() * (i + 1));
-//         [a[i], a[j]] = [a[j], a[i]];
-//     }
-//     return a;
-// }
 
 /*
     https://www.gemini.edu/node/12025
@@ -158,10 +151,10 @@ export function addPlanets(starSystem: StarSystem, getRandom: () => number) {
         if (i < 0 || i >= planetSlots.length) {
             debugger;
         }
-        let starType = weightedRandom(planetTypeChoices, getRandom());
-        if (t) { starType = t; }
+        let planetType = weightedRandom(planetTypeChoices, getRandom());
+        if (t) { planetType = t; }
         starSystem.planets.push(new Planet(
-            starType,
+            planetType,
             starSystem.stars[0],
             planetSlots[i]));
     }
@@ -196,13 +189,18 @@ export function addPlanets(starSystem: StarSystem, getRandom: () => number) {
     //     starSystem.planets.push(new Planet(
     //         PlanetType.Placeholder, starSystem.stars[0], s));
     // }
+
+    starSystem.planets.sort((a, b) => {
+        return a.distance - b.distance;
+    });
 }
 
 export class StarSystem {
     seed: number;
     stars: Array<Star>;
     planets: Array<Planet>;
-    // metallicity: number;
+    habitableZoneMin: number;
+    habitableZoneMax: number;
 
     constructor(seed: number) {
         this.seed = seed;
@@ -210,7 +208,6 @@ export class StarSystem {
         const alea = new (Alea as any)(seed);
 
         this.stars = [new Star(alea)];
-        // this.metallicity = this.stars[0].metallicity;
         
         /*
           Roughly 44% of star systems have two stars. The stars orbit each
@@ -226,10 +223,8 @@ export class StarSystem {
           humans (I suppose) except as it relates to the development of
           human-relevant life.
          */
-        if (alea() < 0.25) {
+        if (alea() < 0.44) {
             this.stars.push(new Star(alea));
-            // this.metallicity = Math.max(this.metallicity, this.stars[1].metallicity);
-
             // One strategy for generating the second star would be to force
             // it to be smaller than the first, but it's simpler to just
             // generate them independently and sort by mass.
@@ -240,6 +235,9 @@ export class StarSystem {
 
         this.planets = [];
         addPlanets(this, alea);
+
+        [this.habitableZoneMin, this.habitableZoneMax] = computeHabitableZone(
+            this.stars[0].starType, this.stars[0].luminosity);
     }
 
     get metallicity(): number {

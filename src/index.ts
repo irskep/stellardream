@@ -22,7 +22,7 @@ import {StarSystem} from "./starSystem";
 // cheatStars();
 
 // main
-const main = document.getElementById("js-main");
+const main = document.getElementById("js-stellardream-main");
 const seed = Date.now();
 
 if (main) {

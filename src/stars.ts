@@ -31,6 +31,7 @@ export enum StarType {
 }
 
 // http://lup.lub.lu.se/luur/download?func=downloadFile&recordOId=8867455&fileOId=8870454
+// which is really from http://adsabs.harvard.edu/abs/2001JRASC..95...32L
 export const StarTypeProbabilities = new Map<StarType, number>([
   [StarType.M, 0.7645629],
   [StarType.K, 0.1213592],
@@ -41,6 +42,7 @@ export const StarTypeProbabilities = new Map<StarType, number>([
   [StarType.O, 0.0000003],
 ]);
 
+// https://www.astro.princeton.edu/~gk/A403/constants.pdf
 export const StarTemperature = new Map<StarType, number>([
   [StarType.M, 3850],
   [StarType.K, 5300],

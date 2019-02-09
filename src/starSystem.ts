@@ -223,7 +223,7 @@ export class StarSystem {
           humans (I suppose) except as it relates to the development of
           human-relevant life.
          */
-        if (alea() < 0.44) {
+        if (alea() < 0.44 / 4) {
             this.stars.push(new Star(alea));
             // One strategy for generating the second star would be to force
             // it to be smaller than the first, but it's simpler to just

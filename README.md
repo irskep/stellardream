@@ -95,6 +95,12 @@ class Planet {
 }
 ```
 
+## Changelog
+
+### 0.1.5
+
+* Initial release with docs
+
 ## Links
 
 ### Prior art

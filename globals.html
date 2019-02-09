@@ -61,124 +61,29 @@
 <div class="container container-main">
 	<div class="row">
 		<div class="col-8 col-content">
-			<div class="tsd-panel tsd-typography">
-				<h1 id="stellar-dream">Stellar Dream</h1>
-				<p><strong>A procedural star system generator</strong></p>
-				<p><a href="http://steveasleep.com/stellardream/">API docs</a> (unfortunately not very good due to TypeDoc being immature)</p>
-				<p><a href="http://steveasleep.com/keplverse/">Fancy demo</a></p>
-				<p>Example:</p>
-				<pre><code class="language-js"><span class="hljs-comment">// yarn add stellardream</span>
-<span class="hljs-keyword">import</span> { StarSystem } <span class="hljs-keyword">from</span> <span class="hljs-string">'stellardream'</span>;
-
-<span class="hljs-keyword">const</span> starSystem = <span class="hljs-keyword">new</span> StarSystem(<span class="hljs-number">1549748672440</span>);
-<span class="hljs-built_in">console</span>.log(<span class="hljs-built_in">JSON</span>.stringify(starSystem, <span class="hljs-literal">null</span>, <span class="hljs-number">2</span>));</code></pre>
-				<p>Output:</p>
-				<pre><code class="language-json">{
-  &quot;seed&quot;: 1549748672440,
-  &quot;stars&quot;: [
-    {
-      &quot;starType&quot;: &quot;M&quot;,
-      &quot;color&quot;: &quot;#ffcc6f&quot;,
-      &quot;luminosity&quot;: 0.08146542016231641,
-      &quot;radius&quot;: 0.6672486719861627,
-      &quot;mass&quot;: 0.00004404465444029455,
-      &quot;metallicity&quot;: -0.4644594123491739
-    }
-  ],
-  &quot;planets&quot;: [
-    {
-      &quot;planetType&quot;: &quot;Neptunian&quot;,
-      &quot;distance&quot;: 0.7056894102143391,
-      &quot;star&quot;: {...},
-      &quot;mass&quot;: 50.855421425168565,
-      &quot;radius&quot;: 10.156380943821096
-    },
-    {
-      &quot;planetType&quot;: &quot;Neptunian&quot;,
-      &quot;distance&quot;: 1.4088214414363596,
-      &quot;star&quot;: {...},
-      &quot;mass&quot;: 93.80083236897875,
-      &quot;radius&quot;: 14.574778000691158
-    },
-    {
-      &quot;planetType&quot;: &quot;Terran&quot;,
-      &quot;distance&quot;: 1.6471194862679563,
-      &quot;star&quot;: {...},
-      &quot;mass&quot;: 1.5873990501015234,
-      &quot;radius&quot;: 1.1381306327054284
-    },
-    {
-      &quot;planetType&quot;: &quot;Terran&quot;,
-      &quot;distance&quot;: 4.667571108746888,
-      &quot;star&quot;: {...},
-      &quot;mass&quot;: 0.38512287666914696,
-      &quot;radius&quot;: 0.7655398605940172
-    }
-  ],
-  &quot;habitableZoneMin&quot;: 0.27854284130147977,
-  &quot;habitableZoneMax&quot;: 0.5492938907169364
-}</code></pre>
-				<h2 id="rough-api-with-units">Rough API with units</h2>
-				<pre><code class="language-ts"><span class="hljs-keyword">class</span> StarSystem {
-  seed: <span class="hljs-built_in">number</span>;
-  stars: <span class="hljs-built_in">Array</span>&lt;Star&gt;;
-  planets: <span class="hljs-built_in">Array</span>&lt;Planet&gt;;
-  habitableZoneMin: <span class="hljs-built_in">number</span>; <span class="hljs-comment">// AU</span>
-  habitableZoneMax: <span class="hljs-built_in">number</span>; <span class="hljs-comment">// AU</span>
-}
-
-<span class="hljs-keyword">class</span> Star {
-    starType: <span class="hljs-string">"M|K|G|F|A|B|O"</span>;
-    luminosity: <span class="hljs-built_in">number</span>;   <span class="hljs-comment">// L⊙ (sun watts)</span>
-    mass: <span class="hljs-built_in">number</span>;         <span class="hljs-comment">// M⊙ (sun masses)</span>
-    radius: <span class="hljs-built_in">number</span>;       <span class="hljs-comment">// R⊙ (sun radii)</span>
-    color: <span class="hljs-built_in">string</span>;        <span class="hljs-comment">// Hex color string</span>
-    metallicity: <span class="hljs-built_in">number</span>;  <span class="hljs-comment">// [Fe/H]</span>
-}
-
-<span class="hljs-keyword">class</span> Planet {
-    distance: <span class="hljs-built_in">number</span>;     <span class="hljs-comment">// AU</span>
-    mass: <span class="hljs-built_in">number</span>;         <span class="hljs-comment">// Earth masses</span>
-    radius: <span class="hljs-built_in">number</span>;       <span class="hljs-comment">// Earth radii</span>
-    star: Star;
-    planetType: <span class="hljs-string">"Terran|Neptunian|Jovian"</span>
-}</code></pre>
-				<h2 id="links">Links</h2>
-				<h3 id="prior-art">Prior art</h3>
-				<ul>
-					<li><a href="http://thrivegame.wikidot.com/procedural-planet-generator">http://thrivegame.wikidot.com/procedural-planet-generator</a></li>
-				</ul>
-				<h3 id="orbits">Orbits</h3>
-				<ul>
-					<li><a href="https://physics.stackexchange.com/questions/41020/what-is-the-relationship-between-mass-speed-and-distance-of-a-planet-orbiting-t">https://physics.stackexchange.com/questions/41020/what-is-the-relationship-between-mass-speed-and-distance-of-a-planet-orbiting-t</a></li>
-					<li><a href="http://homepages.wmich.edu/~korista/Newton-Kepler.html">http://homepages.wmich.edu/~korista/Newton-Kepler.html</a></li>
-				</ul>
-				<h3 id="kepler-data">Kepler data</h3>
-				<ul>
-					<li><a href="http://www.pnas.org/content/111/35/12647">http://www.pnas.org/content/111/35/12647</a></li>
-					<li><a href="http://phl.upr.edu/projects/habitable-exoplanets-catalog">http://phl.upr.edu/projects/habitable-exoplanets-catalog</a></li>
-				</ul>
-				<h3 id="classification-systems">Classification systems</h3>
-				<ul>
-					<li><a href="https://medium.com/starts-with-a-bang/sorry-super-earth-fans-there-are-only-three-classes-of-planet-44f3da47eb64">https://medium.com/starts-with-a-bang/sorry-super-earth-fans-there-are-only-three-classes-of-planet-44f3da47eb64</a></li>
-					<li><strong><a href="https://arxiv.org/pdf/1603.08614v2.pdf%29">https://arxiv.org/pdf/1603.08614v2.pdf%29</a></strong></li>
-					<li><a href="http://phl.upr.edu/library/notes/amassclassificationforbothsolarandextrasolarplanets">http://phl.upr.edu/library/notes/amassclassificationforbothsolarandextrasolarplanets</a></li>
-				</ul>
-				<h3 id="planet-sizes-and-positions">Planet sizes and positions</h3>
-				<ul>
-					<li><a href="https://www.manyworlds.space/index.php/2018/07/09/the-architecture-of-solar-systems/">https://www.manyworlds.space/index.php/2018/07/09/the-architecture-of-solar-systems/</a></li>
-					<li><a href="https://www.manyworlds.space/index.php/2018/07/03/exoplanet-science-flying-high/">https://www.manyworlds.space/index.php/2018/07/03/exoplanet-science-flying-high/</a></li>
-					<li><a href="http://ifa.hawaii.edu/~howard/ast241/exoplanet_properties.pdf">http://ifa.hawaii.edu/~howard/ast241/exoplanet_properties.pdf</a></li>
-					<li><a href="https://www.nasa.gov/image-feature/ames/planetary-systems-by-number-of-known-planets">https://www.nasa.gov/image-feature/ames/planetary-systems-by-number-of-known-planets</a></li>
-					<li><a href="https://exoplanetarchive.ipac.caltech.edu/docs/counts_detail.html">https://exoplanetarchive.ipac.caltech.edu/docs/counts_detail.html</a></li>
-					<li><a href="https://phys.org/news/2017-06-kepler-taught-rocky-planets-common.html">https://phys.org/news/2017-06-kepler-taught-rocky-planets-common.html</a></li>
-				</ul>
-			</div>
+			<section class="tsd-panel-group tsd-index-group">
+				<h2>Index</h2>
+				<section class="tsd-panel tsd-index-panel">
+					<div class="tsd-index-content">
+						<section class="tsd-index-section ">
+							<h3>External modules</h3>
+							<ul class="tsd-index-list">
+								<li class="tsd-kind-external-module"><a href="modules/_index_.html" class="tsd-kind-icon">"index"</a></li>
+								<li class="tsd-kind-external-module"><a href="modules/_planets_.html" class="tsd-kind-icon">"planets"</a></li>
+								<li class="tsd-kind-external-module"><a href="modules/_starsystem_.html" class="tsd-kind-icon">"star<wbr>System"</a></li>
+								<li class="tsd-kind-external-module"><a href="modules/_stars_.html" class="tsd-kind-icon">"stars"</a></li>
+								<li class="tsd-kind-external-module"><a href="modules/_unused_.html" class="tsd-kind-icon">"unused"</a></li>
+								<li class="tsd-kind-external-module"><a href="modules/_weightedchoice_.html" class="tsd-kind-icon">"weighted<wbr>Choice"</a></li>
+							</ul>
+						</section>
+					</div>
+				</section>
+			</section>
 		</div>
 		<div class="col-4 col-menu menu-sticky-wrap menu-highlight">
 			<nav class="tsd-navigation primary">
 				<ul>
-					<li class="globals  ">
+					<li class="globals current ">
 						<a href="globals.html"><em>Globals</em></a>
 					</li>
 					<li class=" tsd-kind-external-module">

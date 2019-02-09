@@ -170,3 +170,4 @@ crashlytics-build.properties
 /lib
 /.cache/
 /dist/
+docs/

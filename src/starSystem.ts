@@ -1,7 +1,7 @@
 import Alea from "alea";
 
 import {Star, StarType, computeHabitableZone} from "./stars";
-import {Planet, PlanetType} from "./planets";
+import {Planet, PlanetType, PlanetTypeProbabilities} from "./planets";
 import weightedRandom from "./weightedChoice";
 
 /// Project a value 0-1 onto a range min-max
@@ -10,31 +10,20 @@ function normalizedToRange(min: number, max: number, val: number): number {
 }
 
 /*
-    https://www.gemini.edu/node/12025
-
-    "In our search, we could have found gas giants beyond orbital distances
-    corresponding to Uranus and Neptune in our own Solar System, but we didn’t
-    find any."
-*/
-
-/*
     https://www.cfa.harvard.edu/news/2013-01
 
-    "At Least One in Six Stars Has an Earth-sized Planet"
-*/
+    "Altogether, the researchers found that 50 percent of stars have a
+    planet of Earth-size or larger in a close orbit. By adding larger
+    planets, which have been detected in wider orbits up to the orbital
+    distance of the Earth, this number reaches 70 percent."
 
-/*
-    https://en.wikipedia.org/wiki/Circumbinary_planet
-    https://en.wikipedia.org/wiki/Habitability_of_binary_star_systems
-
-    Many restrictions on circumbinary planets have not been implemented here
+    "for every planet size except gas giants, the type of star doesn't
+    matter."
 */
+const atLeastOnePlanetProbability = 0.7;
 
-/*
-    https://www.manyworlds.space/index.php/2018/07/09/the-architecture-of-solar-systems/
-    
-    Planets seem to have similar sizes as their neighbors
-*/
+// This comes from nowhere in particular. I made it up.
+const closeBinaryProbability = 0.11;
 
 export function addPlanets(starSystem: StarSystem, getRandom: () => number) {
     switch (starSystem.stars[0].starType) {
@@ -47,43 +36,19 @@ export function addPlanets(starSystem: StarSystem, getRandom: () => number) {
         return;
     }
 
-    if (getRandom() < 0.3) {
+    if (getRandom() > atLeastOnePlanetProbability) {
         // Current research suggests that 70% of sunlike stars have terran
         // or neptunian planets (see comment later). So in 30% of cases, just
         // bail.
         return;
     }
 
-    /*
-        http://iopscience.iop.org/article/10.1086/428383/pdf
-        https://arxiv.org/pdf/1511.07438.pdf
-
-        "One-quarter of the FGK-type stars with [Fe/H] > 0.3 dex harbor
-        Jupiter-like planets with orbital periods shorter than 4 yr. In
-        contrast, gas giant planets are detected around fewer than 3% of
-        the stars with subsolar metallicity. "
-    */
-
-    /*
-    We can use that information to form a simple planet type distribution
-    strategy. If a star has high metallicity, we'll say gas giant probability
-    per plant is 30%; otherwise it'll be 6%.
-    */
-    const jovianWeight = starSystem.metallicity >= 0 ? 0.3 : 0.04;
-    // The others are eyeballed figures from https://www.popularmechanics.com/space/deep-space/a13733860/all-the-exoplanets-weve-discovered-in-one-small-chart/
-    const terrainWeight = 0.3;
-    const neptunianWeight = 0.6;
-
     const [hzMin, hzMax] = computeHabitableZone(
         starSystem.stars[0].starType, starSystem.stars[0].luminosity);
 
-    // Stick a planet slot in the habitable zone because I don't have anything
-    // else to go on. Then add slots toward and away from the sun based on
-    // the Titus-Bode law:
-    // https://en.wikipedia.org/wiki/Titius%E2%80%93Bode_law
-    // According to this paper it's pretty darn accurate:
-    // https://arxiv.org/pdf/1602.02877.pdf
-
+    // Artistic license, since there isn't a clear rule for planet placement:
+    // pick an orbit in the habitable zone, and then use the Titus-Bode relation
+    // to generate 5 closer orbits and 5 farther orbits.
     const planetAnchor = normalizedToRange(hzMin, hzMax, getRandom());
     const numHotSlots = 5;
     const numColdSlots = 5;
@@ -98,51 +63,21 @@ export function addPlanets(starSystem: StarSystem, getRandom: () => number) {
         planetSlots.unshift(planetSlots[0] / normalizedToRange(1.1, 2, getRandom()));
     }
 
-    /*
-        https://www.nasa.gov/mission_pages/kepler/news/17-percent-of-stars-have-earth-size-planets.html
-
-        "Extrapolating from Kepler's currently ongoing observations and results
-        from other detection techniques, scientists have determined that nearly
-        all sun-like stars have planets."
-    */
-
-    /*
-        https://www.cfa.harvard.edu/news/2013-01
-
-        "Altogether, the researchers found that 50 percent of stars have a
-        planet of Earth-size or larger in a close orbit. By adding larger
-        planets, which have been detected in wider orbits up to the orbital
-        distance of the Earth, this number reaches 70 percent."
-
-        "for every planet size except gas giants, the type of star doesn't
-        matter."
-    */
-        
-    /*
-        http://www.pnas.org/content/111/35/12647
-
-        "The HZ of M-type dwarfs corresponds to orbital periods of a few weeks
-        to a few months. Kepler’s current planet catalog is sufficient for
-        addressing statistics of HZ exoplanets orbiting M stars. The results
-        indicate that the average number of small (0.5–1.4 R⊕) HZ
-        (optimistic) planets per M-type main-sequence star is ∼0.5."
-
-        "Collectively, the statistics emerging from the Kepler data suggest
-        that every late-type main-sequence star has at least one planet (of
-        any size), that one in six has an Earth-size planet within a
-        Mercury-like orbit, and that small HZ planets around M dwarfs abound."
-    */
-
+    const jovianWeight = starSystem.metallicity >= 0
+        ? PlanetTypeProbabilities.jovianInHighMetallicitySystem
+        : PlanetTypeProbabilities.jovianInLowMetallicitySystem;
     const planetTypeChoices: Array<[PlanetType, number]> = [
-        [PlanetType.Terran, terrainWeight],
-        [PlanetType.Neptunian, neptunianWeight],
-        [PlanetType.Jovian, jovianWeight],
+        [PlanetType.Terran, PlanetTypeProbabilities.terran],
+        [PlanetType.Neptunian, PlanetTypeProbabilities.neptunian],
+        [PlanetType.Jovian, jovianWeight / atLeastOnePlanetProbability],
     ]
 
+    // Star making planets somewhere random
     let start = Math.floor(normalizedToRange(2, planetSlots.length - 2, getRandom()));
     // 50% of M-Dwarfs have Terrans in the HZ. There's already "some" probability that
     // we'll get a Terran orbiting an M-dwarf in the HZ, but give it an extra 40% nudge
     // anyway.
+    // http://www.pnas.org/content/111/35/12647
     const forceHZTerran = starSystem.stars[0].starType == StarType.M && getRandom() < 0.4;
     if (forceHZTerran) {
         start = numHotSlots;
@@ -154,8 +89,7 @@ export function addPlanets(starSystem: StarSystem, getRandom: () => number) {
         if (i < 0 || i >= planetSlots.length) {
             throw new Error("Trying to make a planet out of bounds");
         }
-        let planetType = weightedRandom(planetTypeChoices, getRandom());
-        if (t) { planetType = t; }
+        let planetType = t || weightedRandom(planetTypeChoices, getRandom());
         starSystem.planets.push(new Planet(
             planetType,
             starSystem.stars[0],
@@ -188,11 +122,6 @@ export function addPlanets(starSystem: StarSystem, getRandom: () => number) {
         makePlanet(right);
     }
 
-    // for (let s of originalSlots) {
-    //     starSystem.planets.push(new Planet(
-    //         PlanetType.Placeholder, starSystem.stars[0], s));
-    // }
-
     starSystem.planets.sort((a, b) => {
         return a.distance - b.distance;
     });
@@ -211,26 +140,11 @@ export class StarSystem {
         const alea = new (Alea as any)(seed);
 
         this.stars = [new Star(alea)];
-        
-        /*
-          Roughly 44% of star systems have two stars. The stars orbit each
-          other at distances of "zero-ish" to 1 light year. Alpha Centauri,
-          for example, has Proxima Centauri at 15,000 AU (~0.23 light years).
 
-          This model will only look at "close binaries" (hand-wavingly
-          estimated at 1/4 of binary systems), and say their planets are in
-          orbit of both stars simultaneously. Other binaries will be treated
-          like separate star systems. Research shows that even non-close
-          binaries make planetary orbits eccentric over time (billions of
-          years), but this would have no effect on colonization potential by
-          humans (I suppose) except as it relates to the development of
-          human-relevant life.
-         */
-        if (alea() < 0.44 / 4) {
+        // Second star so far is only cosmetic and doesn't affect important
+        // things like orbits or habitable zones.
+        if (alea() < closeBinaryProbability) {
             this.stars.push(new Star(alea));
-            // One strategy for generating the second star would be to force
-            // it to be smaller than the first, but it's simpler to just
-            // generate them independently and sort by mass.
             this.stars = this.stars.sort((a, b) => {
                 return b.mass - a.mass;
             });

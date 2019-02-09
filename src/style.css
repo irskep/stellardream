@@ -59,14 +59,6 @@ html {
     margin-left: -7.5px;
 }
 
-.planet-placeholder {
-    width: 1px;
-    height: 15px;
-    background-color: white;
-
-    top: -7.5px;
-}
-
 .planet-neptunian {
     width: 20px;
     height: 20px;

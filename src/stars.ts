@@ -105,33 +105,6 @@ export const StarColors = new Map<StarType, string>([
   [StarType.M, '#ffcc6f'],
 ]);
 
-// http://www.solstation.com/habitable.htm
-/**
-* ~44% of F6-K3 stars with 0.5-1.5 stellar masses are likely binary/multiple star systems,
-* making stable orbits extremely unlikely unless the stars are close together.
-* 
-* Inside HZ: "water is broken up by stellar radiation into oxygen and hydrogen...
-* the freed hydrogen would escape to space due to the relatively puny
-* gravitational pull of small rocky planets like Earth"
-* 
-* Outside HZ: "atmospheric carbon dioxide condenses...which eliminates its
-* greenhouse warming effect."
-* 
-* Stars get brighter as they age, so HZ expands outward. CHZ = "continuously habitable zone"
-* over time.
-*/
-export const HabitableZonePlanetLikelihoods = new Map<StarType, number>([
-  [StarType.M, 0.0002],
-  [StarType.K, 0.001],
-  [StarType.G, 0.002],
-  [StarType.F, 0.001],
-  // my sources don't discuss these star types, and they are rare, so just pick
-  // some random small values
-  [StarType.A, 0.0002],
-  [StarType.B, 0.00015],
-  [StarType.O, 0.0001],
-]);
-
 // "normalized solar flux factor"
 // http://www.solstation.com/habitable.htm
 const SeffInner = new Map<StarType, number>([
@@ -154,14 +127,14 @@ const SeffOuter = new Map<StarType, number>([
   [StarType.O, 0],
 ]);
 
-function computeHabitableZoneHelper(luminosity: number, seff: number): number {
+function computeHZBoundary(luminosity: number, seff: number): number {
   return 1 * Math.pow(luminosity / seff, 0.5);
 }
 
 export function computeHabitableZone(t: StarType, luminosity: number): [number, number] {
   return [
-      computeHabitableZoneHelper(luminosity, SeffInner.get(t)!),
-      computeHabitableZoneHelper(luminosity, SeffOuter.get(t)!)]
+      computeHZBoundary(luminosity, SeffInner.get(t)!),
+      computeHZBoundary(luminosity, SeffOuter.get(t)!)]
 }
 
 export function computeMass(luminosity: number): number {
@@ -186,18 +159,6 @@ export function computeMass(luminosity: number): number {
 }
 
 /*
-// this is garbage and wrong, don't use this
-// might be able to salvage using this:
-// https://www.astro.princeton.edu/~gk/A403/constants.pdf
-export function computeRadius(t: StarType, luminosity: number): number {
-  const temperature = StarTemperature.get(t)!;
-  const tempRatio = temperature / StarTemperature.get(StarType.G)!
-
-  return Math.sqrt(Math.pow(tempRatio, 4) / luminosity);
-}
-*/
-
-/*
   https://arxiv.org/pdf/1511.07438.pdf
   
   According to this paper, metallicity distribution is best represented
@@ -206,7 +167,7 @@ export function computeRadius(t: StarType, luminosity: number): number {
   Units are in [Fe/H], which you should google. It's a measure of the
   presence of iron vs the solar system on a logarithmic scale.
 */
-export function getMetallicityValue(aRandomNumber: number, n2: number): number {
+export function computeMetallicityValue(aRandomNumber: number, n2: number): number {
   const dist1 = gaussian(0.3, 0.1);
   const dist2 = gaussian(-0.45, 0.1);
   const val1 = dist1.ppf(aRandomNumber);
@@ -225,9 +186,6 @@ export class Star {
     color: string;
     metallicity: number;
 
-    // _metallicity?: number;
-    // _metallicityValues: [number, number];
-
     constructor(getRandom: any) {
         let weights = Array<[StarType, number]>();
         StarTypeProbabilities.forEach((v: number, k: StarType) => {
@@ -245,18 +203,8 @@ export class Star {
           StarRadiusMin.get(this.starType)!,
           StarRadiusMax.get(this.starType)!,
           sizeValue);
+
         this.mass = computeMass(this.luminosity);
-
-        // this._metallicity = undefined;
-        // this._metallicityValues = [getRandom(), getRandom()];
-        this.metallicity = getMetallicityValue(getRandom(), getRandom());
+        this.metallicity = computeMetallicityValue(getRandom(), getRandom());
     }
-
-    // get metallicity(): number {
-    //   // this is expensive, so compute it lazily
-    //   if (this._metallicity === null) {
-    //     this._metallicity = getMetallicityValue(this._metallicityValues[0], this._metallicityValues[1]);
-    //   }
-    //   return this._metallicity!;
-    // }
 }

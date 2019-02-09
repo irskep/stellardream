@@ -5,23 +5,6 @@ export enum PlanetType {
     Terran = "Terran",
     Neptunian = "Neptunian",
     Jovian = "Jovian",
-    Placeholder = "Placeholder",
-}
-
-// unused; future work? comments map wonky infographic clusters onto PlanetType
-export enum KeplerGrouping {
-    // "big" jovians that are doing a fusion
-    HotJupiter = "HotJupiter",
-    // "small" jovians
-    ColdGasGiant = "ColdGasGiant",
-    // neptunes
-    IceGiant = "IceGiant",
-    // watery terrans
-    OceanWorld = "OceanWorld",
-    // mercury-sized terrans
-    LavaWorld = "LavaWorld",
-    // terrans
-    Rocky = "Rocky",
 }
 
 // Units: 10^x earth-masses
@@ -51,6 +34,28 @@ export const PlanetTypeRadiusExponent = new Map<PlanetType, number>([
     [PlanetType.Neptunian, 0.59],
     [PlanetType.Jovian, -0.04],
 ]);
+
+export const PlanetTypeProbabilities = {
+    /*
+        http://iopscience.iop.org/article/10.1086/428383/pdf
+        https://arxiv.org/pdf/1511.07438.pdf
+
+        "One-quarter of the FGK-type stars with [Fe/H] > 0.3 dex harbor
+        Jupiter-like planets with orbital periods shorter than 4 yr. In
+        contrast, gas giant planets are detected around fewer than 3% of
+        the stars with subsolar metallicity. "
+
+        So if stars have a 70% chance of having any planets, and a 25%
+        chance of specifically having a gas giant, we want about a 35%
+        chance of a planet being a gas giant.
+    */
+    jovianInHighMetallicitySystem: 0.5,
+    jovianInLowMetallicitySystem: 0.05,
+    // eyeballed from
+    // https://www.popularmechanics.com/space/deep-space/a13733860/all-the-exoplanets-weve-discovered-in-one-small-chart/
+    neptunian: 1,
+    terran: 0.5,
+}
 
 export class Planet {
     distance: number;

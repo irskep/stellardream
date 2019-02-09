@@ -82,7 +82,7 @@ export function addPlanets(starSystem: StarSystem, getRandom: () => number) {
     // the Titus-Bode law:
     // https://en.wikipedia.org/wiki/Titius%E2%80%93Bode_law
     // According to this paper it's pretty darn accurate:
-    // https://watermark.silverchair.com/stt1357.pdf?token=AQECAHi208BE49Ooan9kkhW_Ercy7Dm3ZL_9Cf3qfKAc485ysgAAAkYwggJCBgkqhkiG9w0BBwagggIzMIICLwIBADCCAigGCSqGSIb3DQEHATAeBglghkgBZQMEAS4wEQQMXXlXIp7_lwD8QJsjAgEQgIIB-Z96njhcrt4HyhJSQ_02byW4uXVLfJlgORYjKns4IgHZ7hOohpgBhhuilHJ9CqVseHjZ2gRc6UxJ9zbWPMSEbR2ccKm93ziwbQIfl0cP7lLi50lTyffZyuW4klH9hF5usqCbX3mVLhrMVLaHRqpHY9ciTzJnLosk_FJJbYNV_OkvruGc0uY_6EtOkt13FZRxTG-Of3T9CfZj2L6PMTZxVTOMP-xY8TEDr20Kgxkwp-0DA9Lbec4SBgaEAMYSo8FJDHH_VZqYUE4H5BoUk3MRzaIbmGfCxttLGm96f-Pa0uYneyt6XZFXSUj9X7kAcN1wO0ul3pLBmhhY8dGYF_dFNKOnV3Q4O5yaFjtsJXrJheJh82UsyYmZo36QaZIC8c7h5fDluDz51JM-n_pdaI_Nj6DKXk1eisgd5wLj3MeZappwhTVDsRZnyfhLRkW6VWb0bm-FzcjEw6KvOZtJh9D7-jPyqc4Qnpdt5jLXyLqXJDOlUH1IYf0fJf1k_cw1jAPMHveHHEGrxwpZ1Jee7Q7gR1hZwkVBC4BzPq2K9a22SJ8Jgktr5PHi7RXSTeXVa9mlDTM8uqnXmwYdAu_y3SeyPvIJL7LZ7KKh_Z7FPqIwMjUHWDrY20FWHUl9oRlqthDT9CgEW1ECV9h6-MfEUlKMXUKf92FKxzICRlk
+    // https://arxiv.org/pdf/1602.02877.pdf
 
     const planetAnchor = normalizedToRange(hzMin, hzMax, getRandom());
     const numHotSlots = 5;
@@ -140,7 +140,10 @@ export function addPlanets(starSystem: StarSystem, getRandom: () => number) {
     ]
 
     let start = Math.floor(normalizedToRange(2, planetSlots.length - 2, getRandom()));
-    const forceHZTerran = starSystem.stars[0].starType == StarType.M && getRandom() < 0.5;
+    // 50% of M-Dwarfs have Terrans in the HZ. There's already "some" probability that
+    // we'll get a Terran orbiting an M-dwarf in the HZ, but give it an extra 40% nudge
+    // anyway.
+    const forceHZTerran = starSystem.stars[0].starType == StarType.M && getRandom() < 0.4;
     if (forceHZTerran) {
         start = numHotSlots;
     }
@@ -149,7 +152,7 @@ export function addPlanets(starSystem: StarSystem, getRandom: () => number) {
 
     function makePlanet(i: number, t?: PlanetType) {
         if (i < 0 || i >= planetSlots.length) {
-            debugger;
+            throw new Error("Trying to make a planet out of bounds");
         }
         let planetType = weightedRandom(planetTypeChoices, getRandom());
         if (t) { planetType = t; }

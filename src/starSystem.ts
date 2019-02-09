@@ -174,14 +174,14 @@ export function addPlanets(starSystem: StarSystem, getRandom: () => number) {
     // of continuing our planet-adding loop each time.
     // And FYI, it's totally fine to have 2+ gas giants in a system. This paper
     // describes one with SIX: https://arxiv.org/pdf/1710.07337.pdf
-    while(getRandom() < 0.3 && left > 0) {
+    while(getRandom() < 0.15 && left > 0) {
         left -= 1;
         // Skip a slot sometimes just for fun
         if (left > 0 && getRandom() < 0.5) left -= 1;
         makePlanet(left);
     }
 
-    while(getRandom() < 0.3 && right < planetSlots.length - 1) {
+    while(getRandom() < 0.15 && right < planetSlots.length - 1) {
         right += 1;
         // Skip a slot sometimes just for fun
         if (right < planetSlots.length - 1 && getRandom() < 0.5) right += 1;

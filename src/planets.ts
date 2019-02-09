@@ -58,17 +58,25 @@ export const PlanetTypeProbabilities = {
 }
 
 export class Planet {
+    // AU
     distance: number;
+    // Earth masses
+    mass: number;
+    // Earth radii
+    radius: number;
     star: Star;
     planetType: PlanetType;
 
     constructor(
         planetType: PlanetType,
         star: Star,
-        distance: number)
+        distance: number,
+        mass: number)
     {
         this.planetType = planetType;
         this.distance = distance;
-        this.star = star;
+        this.star = star
+        this.mass = mass;
+        this.radius = Math.pow(this.mass, PlanetTypeRadiusExponent.get(planetType) || 0)
     }
 }

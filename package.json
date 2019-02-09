@@ -16,6 +16,8 @@
   "description": "",
   "main": "lib/index.js",
   "scripts": {
+    "prepublish": "yarn lib",
+    "postpublish": "yarn doc && yarn deploy",
     "lib": "tsc",
     "docs": "typedoc --mode modules --module commonjs --moduleResolution node  --excludeNotExported --out docs src",
     "deploy": "gh-pages -d docs",

@@ -12,7 +12,7 @@ Example:
 // yarn add stellardream
 import { StarSystem } from 'stellardream';
 
-const starSystem = new StarSystem(1549747868036);
+const starSystem = new StarSystem(1549748672440);
 console.log(JSON.stringify(starSystem, null, 2));
 ```
 
@@ -20,41 +20,78 @@ Output:
 
 ```json
 {
-  "seed": 1549747868036,
+  "seed": 1549748672440,
   "stars": [
     {
       "starType": "M",
       "color": "#ffcc6f",
-      "luminosity": 0.07814883353601768,
-      "radius": 0.6432943872734904,
-      "mass": 0.000037298382653340906,
-      "metallicity": 0.2528634301283026
+      "luminosity": 0.08146542016231641,
+      "radius": 0.6672486719861627,
+      "mass": 0.00004404465444029455,
+      "metallicity": -0.4644594123491739
     }
   ],
   "planets": [
     {
       "planetType": "Neptunian",
-      "distance": 0.16810944726859728,
-      "star": {...}
-    },
-    {
-      "planetType": "Terran",
-      "distance": 0.496924006806994,
-      "star": {...}
+      "distance": 0.7056894102143391,
+      "star": {...},
+      "mass": 50.855421425168565,
+      "radius": 10.156380943821096
     },
     {
       "planetType": "Neptunian",
-      "distance": 1.384123549033455,
-      "star": {...}
+      "distance": 1.4088214414363596,
+      "star": {...},
+      "mass": 93.80083236897875,
+      "radius": 14.574778000691158
     },
     {
-      "planetType": "Jovian",
-      "distance": 3.029218926694,
-      "star": {...}
+      "planetType": "Terran",
+      "distance": 1.6471194862679563,
+      "star": {...},
+      "mass": 1.5873990501015234,
+      "radius": 1.1381306327054284
+    },
+    {
+      "planetType": "Terran",
+      "distance": 4.667571108746888,
+      "star": {...},
+      "mass": 0.38512287666914696,
+      "radius": 0.7655398605940172
     }
   ],
-  "habitableZoneMin": 0.2728139668537757,
-  "habitableZoneMax": 0.537996397950277
+  "habitableZoneMin": 0.27854284130147977,
+  "habitableZoneMax": 0.5492938907169364
+}
+```
+
+## Rough API with units
+
+```ts
+class StarSystem {
+  seed: number;
+  stars: Array<Star>;
+  planets: Array<Planet>;
+  habitableZoneMin: number; // AU
+  habitableZoneMax: number; // AU
+}
+
+class Star {
+    starType: "M|K|G|F|A|B|O";
+    luminosity: number;   // L⊙ (sun watts)
+    mass: number;         // M⊙ (sun masses)
+    radius: number;       // R⊙ (sun radii)
+    color: string;        // Hex color string
+    metallicity: number;  // [Fe/H]
+}
+
+class Planet {
+    distance: number;     // AU
+    mass: number;         // Earth masses
+    radius: number;       // Earth radii
+    star: Star;
+    planetType: "Terran|Neptunian|Jovian"
 }
 ```
 

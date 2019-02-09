@@ -1,7 +1,13 @@
 import Alea from "alea";
 
 import {Star, StarType, computeHabitableZone} from "./stars";
-import {Planet, PlanetType, PlanetTypeProbabilities} from "./planets";
+import {
+    Planet,
+    PlanetType,
+    PlanetTypeProbabilities,
+    PlanetTypeMassMin,
+    PlanetTypeMassMax,
+} from "./planets";
 import weightedRandom from "./weightedChoice";
 
 /// Project a value 0-1 onto a range min-max
@@ -90,10 +96,15 @@ export function addPlanets(starSystem: StarSystem, getRandom: () => number) {
             throw new Error("Trying to make a planet out of bounds");
         }
         let planetType = t || weightedRandom(planetTypeChoices, getRandom());
+        let mass = normalizedToRange(
+            PlanetTypeMassMin.get(planetType) || 0,
+            PlanetTypeMassMax.get(planetType) || 0,
+            getRandom())
         starSystem.planets.push(new Planet(
             planetType,
             starSystem.stars[0],
-            planetSlots[i]));
+            planetSlots[i],
+            Math.pow(10, mass)));
     }
 
     if (forceHZTerran) {

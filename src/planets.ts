@@ -29,6 +29,8 @@ export const PlanetTypeMassMax = new Map<PlanetType, number>([
 ]);
 
 // R = M^exponent
+// Figure 3:
+// https://arxiv.org/pdf/1603.08614v2.pdf
 export const PlanetTypeRadiusExponent = new Map<PlanetType, number>([
     [PlanetType.Terran, 0.28],
     [PlanetType.Neptunian, 0.59],

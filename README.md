@@ -1,6 +1,6 @@
 # Stellar Dream
 
-**A procedural star system generator**
+**A procedural star system generator based on 21st century exoplanet research**
 
 [API docs](http://steveasleep.com/stellardream/) (unfortunately not very good due to TypeDoc being immature)
 
@@ -103,31 +103,44 @@ class Planet {
 
 ## Links
 
-### Prior art
+## Stars
 
-- http://thrivegame.wikidot.com/procedural-planet-generator
+* [What Color are the Stars?][starcolors]
+* [The Real Starry Sky][starrysky]
+* [Calculating the Radius of a Star][starradius]
+* [Metallicity of Stars][starmetallicity]
+* [The Metallicity Distribution of the Milky Way Bulge][milkywaymetallicity]
 
-### Orbits
+## Exoplanets
 
-- https://physics.stackexchange.com/questions/41020/what-is-the-relationship-between-mass-speed-and-distance-of-a-planet-orbiting-t
-- http://homepages.wmich.edu/~korista/Newton-Kepler.html
+* [Stars and Habitable Planets](http://www.solstation.com/habitable.htm)
+* [The Planet-Metallicity Correlation][gasgiantmetallicity]
+* [Kepler Mission Objectives][kepler]
+* [All the Exoplanets We've Discovered in One Small Chart][popsci_exoplanets]
+* [Applying Titus-Bode's Law on Exoplanetary Systems][titusbode2]
+* [White Dwarfs, Habitable Zones, and Other Earths][white_dwarf_habitability]
+* [Probabilistic Forecasting of the Masses and Radii of Other Worlds][planettypes]
 
-### Kepler data
+## Prior art
 
-- http://www.pnas.org/content/111/35/12647
-- http://phl.upr.edu/projects/habitable-exoplanets-catalog
+* [Procedurally Generating an Artificial Galaxy][procedural]
+* [Procedural Planet Generator](http://thrivegame.wikidot.com/procedural-planet-generator)
+* [Shannon Eichorn's Planet Generator](https://blog.shannoneichorn.com/?p=43)
 
-### Classification systems
+[white_dwarf_habitability]: https://www.technologyreview.com/s/423341/white-dwarfs-habitable-zones-and-other-earths/
+[starcolors]: http://www.vendian.org/mncharity/dir3/starcolor/
+[procedural]: http://lup.lub.lu.se/luur/download?func=downloadFile&recordOId=8867455&fileOId=8870454
+[starrysky]: http://adsabs.harvard.edu/abs/2001JRASC..95...32L
+[starradius]: http://cas.sdss.org/dr4/en/proj/advanced/hr/radius1.asp
+[starmetallicity]: http://icc.dur.ac.uk/~tt/Lectures/Galaxies/TeX/lec/node27.html
+[gasgiantmetallicity]: https://iopscience.iop.org/article/10.1086/428383/pdf
+[milkywaymetallicity]: https://arxiv.org/pdf/1511.07438.pdf
+[kepler]: https://keplerscience.arc.nasa.gov/objectives.html
 
-- https://medium.com/starts-with-a-bang/sorry-super-earth-fans-there-are-only-three-classes-of-planet-44f3da47eb64
-- **https://arxiv.org/pdf/1603.08614v2.pdf%29**
-- http://phl.upr.edu/library/notes/amassclassificationforbothsolarandextrasolarplanets
+[popsci_exoplanets]: https://www.popularmechanics.com/space/deep-space/a13733860/all-the-exoplanets-weve-discovered-in-one-small-chart/
+[gasgiants]: https://iopscience.iop.org/article/10.1086/428383/pdf
 
-### Planet sizes and positions
+[titusbode]: https://en.wikipedia.org/wiki/Titius%E2%80%93Bode_law
+[titusbode2]: https://arxiv.org/pdf/1602.02877.pdf
 
-- https://www.manyworlds.space/index.php/2018/07/09/the-architecture-of-solar-systems/
-- https://www.manyworlds.space/index.php/2018/07/03/exoplanet-science-flying-high/
-- http://ifa.hawaii.edu/~howard/ast241/exoplanet_properties.pdf
-- https://www.nasa.gov/image-feature/ames/planetary-systems-by-number-of-known-planets
-- https://exoplanetarchive.ipac.caltech.edu/docs/counts_detail.html
-- https://phys.org/news/2017-06-kepler-taught-rocky-planets-common.html
+[planettypes]: https://arxiv.org/pdf/1603.08614v2.pdf

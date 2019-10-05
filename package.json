@@ -26,11 +26,11 @@
     "watch": "parcel watch src/index.html"
   },
   "devDependencies": {
-    "cross-env": "^5.2.0",
+    "cross-env": "^6.0.3",
     "esdoc-standard-plugin": "^1.0.0",
-    "gh-pages": "^1.2.0",
-    "parcel-bundler": "^1.9.7",
-    "typescript": "^2.9.2"
+    "gh-pages": "^2.1.1",
+    "parcel-bundler": "^1.12.3",
+    "typescript": "^3.6.3"
   },
   "dependencies": {
     "alea": "^1.0.0",

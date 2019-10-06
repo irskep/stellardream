@@ -59,6 +59,21 @@ export const PlanetTypeProbabilities = {
     terran: 0.5,
 }
 
+export class Moon {
+    // AU
+    distance: number;
+    // Earth masses
+    mass: number;
+
+    constructor(
+        distance: number,
+        mass: number)
+    {
+        this.distance = distance;
+        this.mass = mass;
+    }
+}
+
 export class Planet {
     // AU
     distance: number;
@@ -69,12 +84,15 @@ export class Planet {
     star: Star;
     planetType: PlanetType;
 
+    moons: Array<Moon>;
+
     constructor(
         planetType: PlanetType,
         star: Star,
         distance: number,
         mass: number)
     {
+        this.moons = [];
         this.planetType = planetType;
         this.distance = distance;
         this.star = star

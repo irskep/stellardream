@@ -4,11 +4,7 @@ html {
 }
 
 .system {
-    /* float: left; */
     position: relative;
-    height: 80px;
-    /* max-width: 500px;
-    max-height: 500px; */
 
     display: flex;
     align-items: center;
@@ -53,7 +49,7 @@ html {
     width: 15px;
     height: 15px;
     border-radius: 7.5px;
-    background-color: gray;
+    background-color: #C6DC66;
 
     top: -7.5px;
     margin-left: -7.5px;
@@ -63,7 +59,7 @@ html {
     width: 20px;
     height: 20px;
     border-radius: 10px;
-    background-color: blue;
+    background-color: #7192E0;
 
     top: -10px;
     margin-left: -10px;
